@@ -56,6 +56,10 @@ src/
 ├── app/lessons/...           # tabs Upcoming/Past/Canceled, new, [id]/edit, [id]/request-change; cancel action
 ├── lib/reschedule-requests.ts # /api/reschedule-requests API functions, 48h deadline helpers
 ├── app/requests/...          # students: their requests + withdraw; teachers: inbox with approve/reject
+├── lib/tasks.ts, lib/assignments.ts # /api/tasks and /api/assignments API functions
+├── app/tasks/...             # teacher task library: list (search, archived), new, [id] (assign, unassign), [id]/edit
+├── app/assignments/...       # students: to-do + completed; teachers/admins: overview with filters; [id] detail
+├── components/markdown.tsx   # safe Markdown (react-markdown, raw HTML shown as text, no images)
 ├── app/teachers/...          # admin pages: list, new, [id]/edit
 ├── app/login, change-password, not-allowed, session/expired
 └── components/               # form and delete button (client components)
