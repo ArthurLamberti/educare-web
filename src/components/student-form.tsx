@@ -3,20 +3,20 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { salvarAluno, type AlunoFormState } from "@/app/alunos/actions";
-import type { Aluno } from "@/lib/alunos";
+import { saveStudent, type StudentFormState } from "@/app/students/actions";
+import type { Student } from "@/lib/students";
 
 const inputClass =
   "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900";
 
-export function AlunoForm({ aluno }: { aluno?: Aluno }) {
-  const action = salvarAluno.bind(null, aluno?.id ?? null);
-  const [state, formAction, pending] = useActionState<AlunoFormState, FormData>(action, {});
+export function StudentForm({ student }: { student?: Student }) {
+  const action = saveStudent.bind(null, student?.id ?? null);
+  const [state, formAction, pending] = useActionState<StudentFormState, FormData>(action, {});
 
   const values = {
-    nome: state.values?.nome ?? aluno?.nome ?? "",
-    email: state.values?.email ?? aluno?.email ?? "",
-    dataNascimento: state.values?.dataNascimento ?? aluno?.dataNascimento ?? "",
+    name: state.values?.name ?? student?.name ?? "",
+    email: state.values?.email ?? student?.email ?? "",
+    birthDate: state.values?.birthDate ?? student?.birthDate ?? "",
   };
 
   return (
@@ -27,20 +27,20 @@ export function AlunoForm({ aluno }: { aluno?: Aluno }) {
         </p>
       )}
 
-      <Field label="Nome" error={state.errors?.nome}>
-        <input name="nome" required maxLength={150} defaultValue={values.nome} key={`nome-${values.nome}`} className={inputClass} />
+      <Field label="Name" error={state.errors?.name}>
+        <input name="name" required maxLength={150} defaultValue={values.name} key={`name-${values.name}`} className={inputClass} />
       </Field>
 
-      <Field label="E-mail" error={state.errors?.email}>
+      <Field label="Email" error={state.errors?.email}>
         <input name="email" type="email" required maxLength={255} defaultValue={values.email} key={`email-${values.email}`} className={inputClass} />
       </Field>
 
-      <Field label="Data de nascimento" error={state.errors?.dataNascimento}>
+      <Field label="Birth date" error={state.errors?.birthDate}>
         <input
-          name="dataNascimento"
+          name="birthDate"
           type="date"
-          defaultValue={values.dataNascimento}
-          key={`dn-${values.dataNascimento}`}
+          defaultValue={values.birthDate}
+          key={`bd-${values.birthDate}`}
           className={inputClass}
         />
       </Field>
@@ -51,10 +51,10 @@ export function AlunoForm({ aluno }: { aluno?: Aluno }) {
           disabled={pending}
           className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
         >
-          {pending ? "Salvando..." : "Salvar"}
+          {pending ? "Saving..." : "Save"}
         </button>
-        <Link href="/alunos" className="rounded-md px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800">
-          Cancelar
+        <Link href="/students" className="rounded-md px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800">
+          Cancel
         </Link>
       </div>
     </form>

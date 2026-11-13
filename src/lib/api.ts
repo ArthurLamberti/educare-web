@@ -1,27 +1,27 @@
 import "server-only";
 
 /**
- * Cliente HTTP para a API Spring Boot (educare-api).
- * Roda apenas no servidor Next.js — o navegador nunca fala direto com a API,
- * então não é preciso configurar CORS no Spring.
+ * HTTP client for the Spring Boot API (educare-api).
+ * Runs only on the Next.js server — the browser never talks to the API directly,
+ * so no CORS configuration is needed in Spring.
  */
 
 const API_URL = process.env.API_URL ?? "http://localhost:8080";
 
-/** Corpo de erro no formato ProblemDetail (RFC 9457) retornado pelo Spring. */
+/** Error body in ProblemDetail format (RFC 9457) returned by Spring. */
 export type ProblemDetail = {
   type?: string;
   title?: string;
   status: number;
   detail?: string;
   instance?: string;
-  /** Erros de validação por campo (GlobalExceptionHandler da API). */
-  erros?: Record<string, string>;
+  /** Per-field validation errors (the API's GlobalExceptionHandler). */
+  errors?: Record<string, string>;
 };
 
 export class ApiError extends Error {
   constructor(public readonly problem: ProblemDetail) {
-    super(problem.detail ?? problem.title ?? `Erro ${problem.status} na API`);
+    super(problem.detail ?? problem.title ?? `API error ${problem.status}`);
     this.name = "ApiError";
   }
 
@@ -42,7 +42,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
       },
     });
   } catch (cause) {
-    throw new Error(`Não foi possível conectar à API em ${API_URL}`, { cause });
+    throw new Error(`Could not connect to the API at ${API_URL}`, { cause });
   }
 
   if (!response.ok) {
@@ -50,7 +50,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     try {
       problem = { ...problem, ...(await response.json()) };
     } catch {
-      // corpo vazio ou não-JSON
+      // empty or non-JSON body
     }
     throw new ApiError(problem);
   }
@@ -59,7 +59,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   return response.json() as Promise<T>;
 }
 
-/** Página no formato do Spring Data (`Page<T>`), normalizada. */
+/** Spring Data page (`Page<T>`), normalized. */
 export type Page<T> = {
   content: T[];
   number: number;
@@ -69,9 +69,9 @@ export type Page<T> = {
 };
 
 type SpringPage<T> =
-  // Serialização via DTO (PagedModel): { content, page: { ... } }
+  // Serialized via DTO (PagedModel): { content, page: { ... } }
   | { content: T[]; page: Omit<Page<T>, "content"> }
-  // Serialização direta de PageImpl
+  // Direct PageImpl serialization
   | Page<T>;
 
 export function normalizePage<T>(raw: SpringPage<T>): Page<T> {

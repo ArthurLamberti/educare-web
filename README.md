@@ -1,35 +1,35 @@
 # Educare Web
 
-Frontend Next.js (App Router, TypeScript, Tailwind) do Educare. Consome a API Spring Boot em `../educare-api`.
+Next.js frontend (App Router, TypeScript, Tailwind) for Educare. Consumes the Spring Boot API in `../educare-api`.
 
-## Como rodar
+## Running
 
 ```bash
-# 1. Suba a API (porta 8080)
+# 1. Start the API (port 8080)
 cd ../educare-api && ./gradlew bootRun
 
-# 2. Configure e suba o frontend (porta 3000)
-cp .env.example .env.local   # ajuste API_URL se necessário
+# 2. Configure and start the frontend (port 3000)
+cp .env.example .env.local   # adjust API_URL if needed
 npm install
 npm run dev
 ```
 
-Acesse http://localhost:3000.
+Open http://localhost:3000.
 
-## Como fala com a API
+## How it talks to the API
 
-As chamadas à API são feitas **somente no servidor Next.js** (Server Components para leitura e
-Server Actions para escrita). O navegador nunca chama o Spring diretamente, então não é preciso
-configurar CORS na API e `API_URL` não é exposta ao cliente.
+API calls happen **only on the Next.js server** (Server Components for reads and Server Actions
+for writes). The browser never calls Spring directly, so no CORS configuration is needed in the API
+and `API_URL` is never exposed to the client.
 
 ```
 src/
-├── lib/api.ts              # fetch base, ApiError (ProblemDetail), normalização de Page<T>
-├── lib/alunos.ts           # funções da API /api/alunos
-├── app/alunos/actions.ts   # Server Actions: salvar / excluir
-├── app/alunos/...          # páginas: listagem, novo, [id]/editar
-└── components/             # formulário e botão de exclusão (client components)
+├── lib/api.ts                # base fetch, ApiError (ProblemDetail), Page<T> normalization
+├── lib/students.ts           # /api/students API functions
+├── app/students/actions.ts   # Server Actions: save / remove
+├── app/students/...          # pages: list, new, [id]/edit
+└── components/               # form and delete button (client components)
 ```
 
-Para adicionar um novo recurso da API: crie `src/lib/<recurso>.ts` usando `apiFetch`, as páginas em
-`src/app/<recurso>/` e as Server Actions correspondentes.
+To add a new API resource: create `src/lib/<resource>.ts` using `apiFetch`, the pages in
+`src/app/<resource>/` and the corresponding Server Actions.

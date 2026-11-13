@@ -15,20 +15,20 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: { default: "Educare", template: "%s | Educare" },
-  description: "Plataforma Educare",
+  description: "Educare platform",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <header className="border-b border-zinc-200 dark:border-zinc-800">
           <nav className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-4">
             <Link href="/" className="text-lg font-bold text-indigo-600">
               Educare
             </Link>
-            <Link href="/alunos" className="text-sm font-medium hover:text-indigo-600">
-              Alunos
+            <Link href="/students" className="text-sm font-medium hover:text-indigo-600">
+              Students
             </Link>
           </nav>
         </header>

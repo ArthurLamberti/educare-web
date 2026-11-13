@@ -2,9 +2,9 @@
 
 import { useTransition } from "react";
 
-import { excluirAluno } from "@/app/alunos/actions";
+import { removeStudent } from "@/app/students/actions";
 
-export function DeleteAlunoButton({ id, nome }: { id: number; nome: string }) {
+export function DeleteStudentButton({ id, name }: { id: number; name: string }) {
   const [pending, startTransition] = useTransition();
 
   return (
@@ -12,12 +12,12 @@ export function DeleteAlunoButton({ id, nome }: { id: number; nome: string }) {
       type="button"
       disabled={pending}
       onClick={() => {
-        if (!window.confirm(`Excluir o aluno "${nome}"?`)) return;
-        startTransition(() => excluirAluno(id));
+        if (!window.confirm(`Delete student "${name}"?`)) return;
+        startTransition(() => removeStudent(id));
       }}
       className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
     >
-      {pending ? "Excluindo..." : "Excluir"}
+      {pending ? "Deleting..." : "Delete"}
     </button>
   );
 }
