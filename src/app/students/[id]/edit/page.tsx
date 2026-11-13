@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 
 import { StudentForm } from "@/components/student-form";
 import { ApiError } from "@/lib/api";
+import { requireUser } from "@/lib/auth";
 import { getStudent } from "@/lib/students";
 
 export const metadata: Metadata = { title: "Edit student" };
 
 export default async function EditStudentPage({ params }: PageProps<"/students/[id]/edit">) {
+  await requireUser(["ADMIN", "TEACHER"]);
   const { id } = await params;
   const studentId = Number(id);
   if (!Number.isInteger(studentId)) notFound();

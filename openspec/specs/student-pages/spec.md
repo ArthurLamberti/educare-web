@@ -41,3 +41,10 @@ The web app SHALL show an error state with a retry button when the student data 
 #### Scenario: API down
 - **WHEN** the API cannot be reached while loading `/students`
 - **THEN** the page shows "Could not load the data" and a "Try again" button
+
+### Requirement: Student pages require staff session
+The web app SHALL only show the student pages to logged-in `ADMIN` and `TEACHER` users; other users SHALL be redirected to login or shown the "not allowed" page.
+
+#### Scenario: Logged out
+- **WHEN** a logged-out user opens `/students`
+- **THEN** they are redirected to `/login?next=/students`

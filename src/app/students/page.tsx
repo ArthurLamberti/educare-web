@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { DeleteStudentButton } from "@/components/delete-student-button";
+import { requireUser } from "@/lib/auth";
 import { listStudents } from "@/lib/students";
 
 export const metadata: Metadata = { title: "Students" };
@@ -9,6 +10,7 @@ export const metadata: Metadata = { title: "Students" };
 const PAGE_SIZE = 20;
 
 export default async function StudentsPage({ searchParams }: PageProps<"/students">) {
+  await requireUser(["ADMIN", "TEACHER"]);
   const { page } = await searchParams;
   const pageNumber = Math.max(0, Number(page) || 0);
   const students = await listStudents(pageNumber, PAGE_SIZE);

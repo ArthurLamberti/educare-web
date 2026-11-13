@@ -1,9 +1,17 @@
 import "server-only";
 
+import { redirect } from "next/navigation";
+
+import { getSessionToken } from "./session";
+import { getTenantSlug } from "./tenant";
+
 /**
  * HTTP client for the Spring Boot API (educare-api).
  * Runs only on the Next.js server — the browser never talks to the API directly,
  * so no CORS configuration is needed in Spring.
+ *
+ * Every call carries the school (`X-Tenant`) and, unless `auth: false`, the session token.
+ * A rejected token (401) ends the session; a forbidden call (403) shows the not-allowed page.
  */
 
 const API_URL = process.env.API_URL ?? "http://localhost:8080";
@@ -28,17 +36,32 @@ export class ApiError extends Error {
   get status() {
     return this.problem.status;
   }
+
+  /** The API answers 404 "School not found" when the subdomain's school does not exist. */
+  get isUnknownSchool() {
+    return this.status === 404 && this.problem.detail === "School not found";
+  }
 }
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+type ApiInit = RequestInit & {
+  /** Send the session token (default true). Use false for login and public calls. */
+  auth?: boolean;
+};
+
+export async function apiFetch<T>(path: string, { auth = true, ...init }: ApiInit = {}): Promise<T> {
+  const tenant = await getTenantSlug();
+  const token = auth ? await getSessionToken() : undefined;
+
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...init,
       headers: {
         Accept: "application/json",
-        ...(init?.body ? { "Content-Type": "application/json" } : {}),
-        ...init?.headers,
+        ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...(tenant ? { "X-Tenant": tenant } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init.headers,
       },
     });
   } catch (cause) {
@@ -52,6 +75,8 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     } catch {
       // empty or non-JSON body
     }
+    if (auth && response.status === 401) redirect("/session/expired");
+    if (auth && response.status === 403) redirect("/not-allowed");
     throw new ApiError(problem);
   }
 

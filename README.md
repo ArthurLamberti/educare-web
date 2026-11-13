@@ -14,7 +14,26 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://demo.localhost:3000 and log in with `admin@demo.com` / `password123` (school `demo` is
+seeded by the API in its `dev` profile). Modern browsers resolve `*.localhost` to your machine, so no
+`/etc/hosts` change is needed.
+
+## Schools and sessions
+
+Each school is served on its own subdomain (`<school>.<ROOT_DOMAIN>`); the root domain only shows a
+landing page. `src/proxy.ts` takes the school slug from the host and passes it to server code in the
+`x-tenant-slug` request header; `apiFetch` sends it to the API as `X-Tenant`.
+
+After login the API token is stored in the httpOnly cookie `educare_session`, valid only on that
+school's subdomain. Pages and Server Actions call `requireUser(roles)` (`src/lib/auth.ts`), which is
+the real authorization check: it redirects to `/login`, to `/change-password` while the user has a
+temporary password, or to `/not-allowed` for other roles. The proxy only does the optimistic redirect
+to login when there is no cookie. API 401 ends the session (`/session/expired`).
+
+| Variable | Purpose |
+|---|---|
+| `API_URL` | educare-api base URL (server only) |
+| `ROOT_DOMAIN` | Domain schools are subdomains of, e.g. `educare.com`; `localhost:3000` in development |
 
 ## How it talks to the API
 
@@ -24,12 +43,19 @@ and `API_URL` is never exposed to the client.
 
 ```
 src/
-├── lib/api.ts                # base fetch, ApiError (ProblemDetail), Page<T> normalization
+├── proxy.ts                  # subdomain → school, redirect to login without a session
+├── lib/api.ts                # base fetch (X-Tenant, Authorization), ApiError, Page<T> normalization
+├── lib/auth.ts               # getCurrentUser / requireUser / getSchool (data access layer)
+├── lib/session.ts            # session cookie
 ├── lib/students.ts           # /api/students API functions
+├── lib/teachers.ts           # /api/teachers API functions
 ├── app/students/actions.ts   # Server Actions: save / remove
 ├── app/students/...          # pages: list, new, [id]/edit
+├── app/teachers/...          # admin pages: list, new, [id]/edit
+├── app/login, change-password, not-allowed, session/expired
 └── components/               # form and delete button (client components)
 ```
 
 To add a new API resource: create `src/lib/<resource>.ts` using `apiFetch`, the pages in
-`src/app/<resource>/` and the corresponding Server Actions.
+`src/app/<resource>/` and the corresponding Server Actions. Start every page and Server Action with
+`await requireUser([...roles])`.

@@ -41,3 +41,14 @@ Same structure as student pages (`src/lib/teachers.ts`, `src/app/teachers/**`, f
 - [`authInterrupts`/`forbidden()` may require an experimental flag in this Next version] → Check `node_modules/next/dist/docs` before implementing; fall back to rendering a "not allowed" component.
 - [Proxy is not a security boundary] → All data access goes through `requireUser`; Server Actions re-check (documented pattern in Next docs).
 - [Cookie set on `localhost` subdomains in some browsers] → Host-only cookies work on `demo.localhost`; verify in Chrome and Firefox during implementation.
+
+## Implementation notes
+
+Findings while implementing (Next.js 16.4 docs and runtime behavior):
+
+- **Host for tenant resolution**: the proxy reads `x-forwarded-host` before `host`. When a Server Action redirects, Next.js renders the target with an internal fetch to its own origin (`Host: localhost:3000`) and forwards the original host only in `x-forwarded-host`; using `host` alone sent post-login redirects to the root-domain landing page. Reverse proxies set the same header.
+- **`forbidden()` not used**: it is still experimental (`experimental.authInterrupts`). `requireUser` redirects to a `/not-allowed` page instead, and `apiFetch` does the same on API 403.
+- **Session expiry**: `apiFetch` redirects to the `/session/expired` Route Handler on API 401 (cookies can only be deleted in Route Handlers and Server Actions), which clears the cookie and redirects to `/login`.
+- **Request dedupe with React `cache()`** instead of `use cache: private` for `getCurrentUser`: a browser-side private cache could keep showing `mustChangePassword` or the previous user for its stale time after a password change or logout. Session reads stay inside `<Suspense>` boundaries.
+- **Public `GET /api/tenant`** (added to educare-api change 02) lets `/login` show the school name or "School not found" before any login.
+- **Shared `src/lib/host.ts`** (no `server-only`) holds `slugFromHost` and the header/cookie names used by both the proxy and server code.

@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { ApiError } from "@/lib/api";
+import { requireUser } from "@/lib/auth";
 import { createStudent, deleteStudent, updateStudent, type StudentRequest } from "@/lib/students";
 
 export type StudentFormState = {
@@ -37,6 +38,7 @@ export async function saveStudent(
   _prev: StudentFormState,
   formData: FormData,
 ): Promise<StudentFormState> {
+  await requireUser(["ADMIN", "TEACHER"]);
   const data = readForm(formData);
   try {
     if (id === null) await createStudent(data);
@@ -48,6 +50,7 @@ export async function saveStudent(
 }
 
 export async function removeStudent(id: number) {
+  await requireUser(["ADMIN", "TEACHER"]);
   await deleteStudent(id);
   refresh();
 }
