@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { FlashcardDemo } from "@/components/flashcard-demo";
 import { SchoolFinder } from "@/components/school-finder";
 import { ROOT_DOMAIN } from "@/lib/host";
@@ -21,11 +23,11 @@ const ROLES = [
     ],
   },
   {
-    title: "Escolas",
+    title: "Escolas e professores particulares",
     items: [
-      "Têm um endereço próprio, separado de todas as outras escolas",
-      "Cadastram os professores, e cada professor cadastra seus alunos",
-      "Reúnem aulas, tarefas e pedidos em um só lugar",
+      "Têm um endereço próprio, separado de todos os outros",
+      "Na escola, a administração cadastra os professores; cada professor cadastra seus alunos",
+      "O professor particular cria o próprio espaço em poucos minutos; a Educare libera o acesso em seguida",
     ],
   },
 ];
@@ -40,11 +42,20 @@ export function Landing() {
             Aulas, lição de casa e flashcards para o ensino individual.
           </h1>
           <p className="max-w-prose text-lg text-ink-600 dark:text-ink-300">
-            A Educare dá a cada escola o seu próprio espaço. Professores planejam aulas e corrigem tarefas; alunos sabem
+            A Educare dá a cada escola, e a cada professor particular, o seu próprio espaço. Professores planejam aulas e corrigem tarefas; alunos sabem
             o que vem a seguir e revisam um pouco do que aprenderam todo dia.
           </p>
           <SchoolFinder rootDomain={ROOT_DOMAIN} />
           <p className="text-sm text-ink-500">Não sabe o endereço? Ele está no convite que sua escola enviou.</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-ink-200 pt-5 dark:border-ink-800">
+            <span className="text-ink-700 dark:text-ink-300">Dá aulas por conta própria?</span>
+            <Link
+              href="/signup"
+              className="rounded-md border-2 border-brand-600 px-4 py-2 font-bold text-brand-700 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-950"
+            >
+              Sou professor particular
+            </Link>
+          </div>
         </div>
         <div className="md:-rotate-1">
           <FlashcardDemo />

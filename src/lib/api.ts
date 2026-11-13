@@ -1,5 +1,6 @@
 import "server-only";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getSessionToken } from "./session";
@@ -11,7 +12,8 @@ import { getTenantSlug } from "./tenant";
  * so no CORS configuration is needed in Spring.
  *
  * Every call carries the school (`X-Tenant`) and, unless `auth: false`, the session token.
- * A rejected token (401) ends the session; a forbidden call (403) shows the not-allowed page.
+ * A rejected token (401) ends the session; a forbidden call (403) shows the not-allowed page, or
+ * `/pending` when the space is not active (`code: ACCOUNT_INACTIVE`).
  */
 
 const API_URL = process.env.API_URL ?? "http://localhost:8080";
@@ -25,6 +27,8 @@ export type ProblemDetail = {
   instance?: string;
   /** Per-field validation errors (the API's GlobalExceptionHandler). */
   errors?: Record<string, string>;
+  /** Machine-readable reason, e.g. `EMAIL_NOT_CONFIRMED` or `ACCOUNT_INACTIVE`. */
+  code?: string;
 };
 
 export class ApiError extends Error {
@@ -46,11 +50,18 @@ export class ApiError extends Error {
 type ApiInit = RequestInit & {
   /** Send the session token (default true). Use false for login and public calls. */
   auth?: boolean;
+  /**
+   * Tell the API the browser's IP (`X-Forwarded-For`), for its rate limits on public endpoints.
+   * Taken from the incoming request's last `X-Forwarded-For` hop (set by the reverse proxy in front
+   * of Next.js, which must overwrite what clients send).
+   */
+  forwardClientIp?: boolean;
 };
 
-export async function apiFetch<T>(path: string, { auth = true, ...init }: ApiInit = {}): Promise<T> {
+export async function apiFetch<T>(path: string, { auth = true, forwardClientIp = false, ...init }: ApiInit = {}): Promise<T> {
   const tenant = await getTenantSlug();
   const token = auth ? await getSessionToken() : undefined;
+  const clientIp = forwardClientIp ? await incomingClientIp() : null;
 
   let response: Response;
   try {
@@ -61,6 +72,7 @@ export async function apiFetch<T>(path: string, { auth = true, ...init }: ApiIni
         ...(init.body ? { "Content-Type": "application/json" } : {}),
         ...(tenant ? { "X-Tenant": tenant } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(clientIp ? { "X-Forwarded-For": clientIp } : {}),
         ...init.headers,
       },
     });
@@ -76,12 +88,18 @@ export async function apiFetch<T>(path: string, { auth = true, ...init }: ApiIni
       // empty or non-JSON body
     }
     if (auth && response.status === 401) redirect("/session/expired");
-    if (auth && response.status === 403) redirect("/not-allowed");
+    if (auth && response.status === 403) redirect(problem.code === "ACCOUNT_INACTIVE" ? "/pending" : "/not-allowed");
     throw new ApiError(problem);
   }
 
-  if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+  // 204, and 202/200 answers without a body (e.g. resend confirmation).
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
+async function incomingClientIp() {
+  const forwarded = (await headers()).get("x-forwarded-for");
+  return forwarded?.split(",").at(-1)?.trim() || null;
 }
 
 /** Spring Data page (`Page<T>`), normalized. */

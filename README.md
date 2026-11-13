@@ -18,10 +18,10 @@ Open http://demo.localhost:3000 and log in with `admin@demo.com` / `password123`
 seeded by the API in its `dev` profile). Modern browsers resolve `*.localhost` to your machine, so no
 `/etc/hosts` change is needed.
 
-## Schools and sessions
+## Schools, private teachers and sessions
 
-Each school is served on its own subdomain (`<school>.<ROOT_DOMAIN>`); the root domain only shows a
-landing page. `src/proxy.ts` takes the school slug from the host and passes it to server code in the
+Each school, and each private teacher's space, is served on its own subdomain (`<slug>.<ROOT_DOMAIN>`).
+The root domain only has the landing page and the private teacher sign-up (`/signup`). `src/proxy.ts` takes the school slug from the host and passes it to server code in the
 `x-tenant-slug` request header; `apiFetch` sends it to the API as `X-Tenant`.
 
 After login the API token is stored in the httpOnly cookie `educare_session`, valid only on that
@@ -29,6 +29,40 @@ school's subdomain. Pages and Server Actions call `requireUser(roles)` (`src/lib
 the real authorization check: it redirects to `/login`, to `/change-password` while the user has a
 temporary password, or to `/not-allowed` for other roles. The proxy only does the optimistic redirect
 to login when there is no cookie. API 401 ends the session (`/session/expired`).
+
+### Private teacher sign-up
+
+1. `localhost:3000/signup` (root domain): name, email, password, space name, address (checked while
+   typing) and time zone (defaults to the browser's). The API creates the space and emails a link.
+2. In development the email lands in Mailpit: http://localhost:8026 (started by the API's `compose.yaml`).
+3. The link opens `<slug>.localhost:3000/confirm?token=…`, which confirms only when "Confirmar meu e-mail"
+   is pressed (link scanners cannot use the token up), then sends to `/login?confirmed=1`.
+4. Logging in before confirming shows a "Reenviar link" option. "Usei o e-mail errado" on the
+   check-email screen lets the teacher fix the email and send again with the same password.
+
+5. After confirming, the teacher can log in but the space is `PENDING`: every page leads to `/pending`
+   ("Quase lá") until the operator activates it (later: a payment). A suspended space shows the same
+   page with a "suspenso" text.
+
+### Operator panel
+
+`localhost:3000/admin` (root domain only): platform admins log in with email and password. The API
+creates the system admin at startup (`EDUCARE_ADMIN_EMAIL`); the first password is set with "Esqueci a
+senha (ou primeiro acesso)" (email in Mailpit in development). The admin's token stays in an httpOnly
+cookie limited to `/admin`. Tabs Aguardando liberação / Ativos / Suspensos, with "Liberar",
+"Suspender" and "Reativar".
+
+### Forgot password
+
+"Esqueci a senha" on every login page: `/forgot-password` → email with a link →
+`/reset-password?token=…` → `/login?reset=1`. The operator panel has the same pages under `/admin/`.
+
+Public sign-up calls forward the browser's IP (`X-Forwarded-For`, last hop of the incoming header) so
+the API can rate-limit per visitor; in production the reverse proxy in front of Next.js must set that
+header, overwriting what clients send.
+
+School admins and private teachers change the name and time zone at `/settings` ("Configurações" in
+the user menu).
 
 | Variable | Purpose |
 |---|---|
@@ -43,7 +77,17 @@ and `API_URL` is never exposed to the client.
 
 ```
 src/
-├── proxy.ts                  # subdomain → school, redirect to login without a session
+├── proxy.ts                  # subdomain → school, redirect to login without a session; root: /, /signup, /admin
+├── lib/signup.ts             # /api/public/** (address check, sign-up, confirm, resend)
+├── app/signup/...            # private teacher sign-up (root domain), check-email + resend
+├── app/confirm/...           # email confirmation (button, then /login?confirmed=1)
+├── app/settings/...          # name and time zone (school admins, private teachers)
+├── app/pending/...           # shown while the space is PENDING or SUSPENDED
+├── lib/operator.ts           # /api/platform/** with the platform admin's token cookie
+├── app/admin/...             # operator panel (root domain): admin login, forgot password, activate/suspend spaces
+├── lib/password.ts           # forgot/reset password (school users and platform admins)
+├── app/forgot-password, app/reset-password # "Esqueci a senha" on school subdomains
+├── components/time-zone-select.tsx # Brazilian zones first; list computed on the server
 ├── lib/api.ts                # base fetch (X-Tenant, Authorization), ApiError, Page<T> normalization
 ├── lib/auth.ts               # getCurrentUser / requireUser / getSchool (data access layer)
 ├── lib/session.ts            # session cookie

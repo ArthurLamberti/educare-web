@@ -15,7 +15,7 @@ export default function ChangePasswordPage() {
 }
 
 async function ChangePassword() {
-  const user = await requireUser(undefined, { allowPasswordChange: true });
+  const user = await requireUser(undefined, { allowPasswordChange: true, allowInactive: true });
   return (
     <section className="mx-auto flex w-full max-w-sm flex-col gap-6">
       <div>

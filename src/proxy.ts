@@ -1,9 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { SESSION_COOKIE, slugFromHost, TENANT_HEADER } from "./lib/host";
+import { OPERATOR_COOKIE, SESSION_COOKIE, slugFromHost, TENANT_HEADER } from "./lib/host";
 
 /** Pages reachable without a session on a school subdomain. */
-const PUBLIC_PATHS = ["/login", "/session/expired"];
+const PUBLIC_PATHS = ["/login", "/session/expired", "/confirm", "/forgot-password", "/reset-password"];
+
+/** The root domain only has the landing page, the private teacher sign-up and the operator panel. */
+const ROOT_PATHS = ["/", "/signup", "/admin", "/admin/login", "/admin/forgot-password", "/admin/reset-password"];
 
 /**
  * Routes each request to its school by subdomain and does the optimistic login redirect.
@@ -24,10 +27,13 @@ export function proxy(request: NextRequest) {
   requestHeaders.delete(TENANT_HEADER);
 
   if (!slug) {
-    // Root domain: only the landing page exists.
-    if (pathname !== "/") return NextResponse.redirect(new URL("/", origin));
+    if (!ROOT_PATHS.includes(pathname)) return NextResponse.redirect(new URL("/", origin));
+    if (pathname === "/admin" && !request.cookies.has(OPERATOR_COOKIE)) return NextResponse.redirect(new URL("/admin/login", origin));
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
+
+  // Sign-up and the operator panel only exist on the root domain.
+  if (pathname === "/signup" || pathname === "/admin" || pathname.startsWith("/admin/")) return NextResponse.redirect(new URL("/", origin));
 
   requestHeaders.set(TENANT_HEADER, slug);
 

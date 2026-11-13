@@ -6,7 +6,7 @@ Lets users of a school log in and out of the web app, keeps their session secure
 ## Requirements
 
 ### Requirement: Login page
-The web app SHALL provide `/login` with email and password fields. On success it SHALL store the session and redirect to the page originally requested (only same-site paths) or to the home page. On failure it SHALL show the API's message without clearing the email.
+The web app SHALL provide `/login` with email and password fields. On success it SHALL store the session and redirect to the page originally requested (only same-site paths) or to the home page. On failure it SHALL show the API's message without clearing the email. When the API reports the email is not confirmed, it SHALL explain it and offer "Reenviar link". With `confirmed=1` it SHALL show "E-mail confirmado. Entre com sua senha."
 
 #### Scenario: Successful login
 - **WHEN** a user submits valid credentials on `demo.localhost:3000/login`
@@ -14,7 +14,7 @@ The web app SHALL provide `/login` with email and password fields. On success it
 
 #### Scenario: Invalid credentials
 - **WHEN** the API responds 401
-- **THEN** the page shows "Invalid email or password" and keeps the email typed
+- **THEN** the page shows the invalid credentials message and keeps the email typed
 
 #### Scenario: Return to requested page
 - **WHEN** a logged-out user opens `/students`, is sent to login and logs in
@@ -23,6 +23,10 @@ The web app SHALL provide `/login` with email and password fields. On success it
 #### Scenario: Open redirect attempt
 - **WHEN** the login URL carries `next=https://evil.example`
 - **THEN** after login the user lands on the home page
+
+#### Scenario: Email not confirmed
+- **WHEN** the API responds 403 with `code: EMAIL_NOT_CONFIRMED`
+- **THEN** the page says the email must be confirmed first and offers "Reenviar link"
 
 ### Requirement: Session storage
 The web app SHALL keep the API token only in an httpOnly, `SameSite=Lax` cookie (Secure in production) scoped to the school's host and expiring with the token. The token SHALL never be exposed to client-side JavaScript or to another school's subdomain.
