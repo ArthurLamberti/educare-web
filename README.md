@@ -51,6 +51,9 @@ src/
 ├── lib/teachers.ts           # /api/teachers API functions
 ├── app/students/actions.ts   # Server Actions: save / remove
 ├── app/students/...          # pages: list, new, [id]/edit
+├── lib/datetime.ts           # school time zone <-> UTC instants (Intl, DST-safe)
+├── lib/lessons.ts            # /api/lessons API functions
+├── app/lessons/...           # tabs Upcoming/Past/Canceled, new, [id]/edit; cancel action
 ├── app/teachers/...          # admin pages: list, new, [id]/edit
 ├── app/login, change-password, not-allowed, session/expired
 └── components/               # form and delete button (client components)

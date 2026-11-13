@@ -7,9 +7,13 @@ const NAV: Record<Role, { href: string; label: string }[]> = {
   ADMIN: [
     { href: "/teachers", label: "Teachers" },
     { href: "/students", label: "Students" },
+    { href: "/lessons", label: "Lessons" },
   ],
-  TEACHER: [{ href: "/students", label: "Students" }],
-  STUDENT: [],
+  TEACHER: [
+    { href: "/students", label: "Students" },
+    { href: "/lessons", label: "Lessons" },
+  ],
+  STUDENT: [{ href: "/lessons", label: "Lessons" }],
 };
 
 /** Session-dependent part of the header; rendered inside <Suspense> so the shell stays static. */

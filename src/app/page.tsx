@@ -1,16 +1,22 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { requireUser, type Role } from "@/lib/auth";
+import { LessonList } from "@/components/lesson-list";
+import { requireUser, type Role, type User } from "@/lib/auth";
 import { ROOT_DOMAIN } from "@/lib/host";
+import { listLessons } from "@/lib/lessons";
 import { getTenantSlug } from "@/lib/tenant";
 
 const LINKS: Record<Role, { href: string; label: string }[]> = {
   ADMIN: [
     { href: "/teachers", label: "Manage teachers" },
     { href: "/students", label: "View students" },
+    { href: "/lessons", label: "View lessons" },
   ],
-  TEACHER: [{ href: "/students", label: "View students" }],
+  TEACHER: [
+    { href: "/lessons/new", label: "Schedule a lesson" },
+    { href: "/students", label: "View students" },
+  ],
   STUDENT: [],
 };
 
@@ -37,7 +43,28 @@ async function HomeContent() {
           </Link>
         ))}
       </div>
+      {user.role !== "ADMIN" && <NextLessons user={user} />}
     </section>
+  );
+}
+
+/** Next 5 scheduled lessons of a teacher or student. */
+async function NextLessons({ user }: { user: User }) {
+  const lessons = await listLessons({ from: new Date(), status: "SCHEDULED", size: 5 });
+  return (
+    <div className="mt-4 flex w-full flex-col gap-3">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-lg font-semibold">Next lessons</h2>
+        <Link href="/lessons" className="text-sm font-medium text-indigo-600 hover:underline">
+          All lessons →
+        </Link>
+      </div>
+      {lessons.content.length === 0 ? (
+        <p className="text-sm text-zinc-500">No upcoming lessons.</p>
+      ) : (
+        <LessonList lessons={lessons.content} role={user.role} timeZone={user.tenant.timeZone} />
+      )}
+    </div>
   );
 }
 
