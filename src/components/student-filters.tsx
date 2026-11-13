@@ -24,13 +24,13 @@ export function StudentFilters({ teachers }: { teachers?: TeacherOption[] }) {
     <div className="flex flex-wrap items-center gap-4 text-sm">
       {teachers && (
         <label className="flex items-center gap-2">
-          Teacher
+          Professor
           <select
             value={searchParams.get("teacherId") ?? ""}
             onChange={(e) => update("teacherId", e.target.value || null)}
-            className="rounded-md border border-zinc-300 bg-white px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+            className="rounded-md border border-ink-300 bg-white px-2 py-1 dark:border-ink-700 dark:bg-ink-900"
           >
-            <option value="">All teachers</option>
+            <option value="">Todos os professores</option>
             {teachers.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
@@ -45,7 +45,7 @@ export function StudentFilters({ teachers }: { teachers?: TeacherOption[] }) {
           checked={searchParams.get("inactive") === "1"}
           onChange={(e) => update("inactive", e.target.checked ? "1" : null)}
         />
-        Show inactive
+        Mostrar inativos
       </label>
     </div>
   );

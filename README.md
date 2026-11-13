@@ -52,8 +52,9 @@ src/
 ├── app/students/actions.ts   # Server Actions: save / remove
 ├── app/students/...          # pages: list, new, [id]/edit
 ├── lib/datetime.ts           # school time zone <-> UTC instants (Intl, DST-safe)
-├── lib/lessons.ts            # /api/lessons API functions
-├── app/lessons/...           # tabs Upcoming/Past/Canceled, new, [id]/edit, [id]/request-change; cancel action
+├── lib/lessons.ts            # /api/lessons and /api/lesson-series API functions
+├── app/lessons/...           # tabs Upcoming/Past/Canceled + active weekly series, new (optional "Repetir toda semana"),
+│                             # [id]/edit, [id]/request-change; cancel and end-series actions
 ├── lib/reschedule-requests.ts # /api/reschedule-requests API functions, 48h deadline helpers
 ├── app/requests/...          # students: their requests + withdraw; teachers: inbox with approve/reject
 ├── lib/tasks.ts, lib/assignments.ts # /api/tasks and /api/assignments API functions
@@ -63,11 +64,13 @@ src/
 ├── app/grading/...           # teacher queue (oldest submission first) and [id] grading page (score + feedback)
 ├── components/markdown.tsx   # safe Markdown (react-markdown, raw HTML shown as text, no images)
 ├── components/markdown-editor.tsx # Write/Preview editor, optional unsaved-changes warning
-├── lib/decks.ts              # /api/decks and /api/cards API functions
-├── app/decks/...             # teachers: deck list, new, [id] (card editor + students), [id]/edit; students: their decks, read-only cards
-├── components/card-editor.tsx # add, inline edit, delete, up/down reorder (useOptimistic)
-├── lib/reviews.ts            # /api/reviews (queue, rate, progress) and /api/decks/{id}/progress
-├── app/study/...             # student study session (all decks or ?deck=), rating Server Action
+├── lib/flashcards.ts         # per-student cards (/api/students/{id}/cards, /api/cards) and /api/flashcards/progress
+├── app/flashcards/...        # students: their words; teachers/admins: progress per student
+├── app/students/[id]/flashcards # teacher adds (one or in bulk), edits and deletes a student's words
+├── components/card-editor.tsx # card list with stage, inline edit, delete; AddCardForm
+├── components/bulk-card-form.tsx # paste "palavra;tradução" lines (lib/card-lines.ts parses and previews)
+├── lib/reviews.ts            # /api/reviews (queue, rate, progress)
+├── app/study/...             # student study session, rating Server Action
 ├── components/study-session.tsx # reveal (Space), rate (1-4), Again re-queue, refetch when empty, summary
 ├── app/teachers/...          # admin pages: list, new, [id]/edit
 ├── app/login, change-password, not-allowed, session/expired

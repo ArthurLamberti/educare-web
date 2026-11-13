@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { getStudent } from "@/lib/students";
 import { teacherOptions } from "@/lib/teacher-options";
 
-export const metadata: Metadata = { title: "Edit student" };
+export const metadata: Metadata = { title: "Editar aluno" };
 
 export default async function EditStudentPage({ params }: PageProps<"/students/[id]/edit">) {
   const user = await requireUser(["ADMIN", "TEACHER"]);
@@ -23,7 +23,7 @@ export default async function EditStudentPage({ params }: PageProps<"/students/[
 
   return (
     <section className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">Edit student</h1>
+      <h1 className="text-2xl font-bold">Editar aluno</h1>
       <StudentForm student={student} teachers={teachers} />
     </section>
   );

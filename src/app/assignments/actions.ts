@@ -17,7 +17,7 @@ export async function submitAnswerAction(id: number, _prev: AnswerFormState, for
     await submitAnswer(id, answer);
   } catch (error) {
     if (error instanceof ApiError) return { message: error.message, error: error.problem.errors?.answer, values: { answer } };
-    return { message: error instanceof Error ? error.message : "Unexpected error", values: { answer } };
+    return { message: error instanceof Error ? error.message : "Erro inesperado", values: { answer } };
   }
   refresh();
   return { saved: true };
@@ -42,7 +42,7 @@ export async function gradeAction(id: number, version: number, _prev: GradeFormS
     if (error instanceof ApiError) {
       return { message: error.message, staleVersion: error.status === 409 ? version : undefined, errors: error.problem.errors, values };
     }
-    return { message: error instanceof Error ? error.message : "Unexpected error", values };
+    return { message: error instanceof Error ? error.message : "Erro inesperado", values };
   }
   refresh(); // also re-renders the layout, so the "To grade" counter updates
   redirect("/grading?graded=1");

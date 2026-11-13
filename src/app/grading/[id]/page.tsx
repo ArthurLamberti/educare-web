@@ -10,9 +10,9 @@ import { getAssignment } from "@/lib/assignments";
 import { requireUser } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
 
-export const metadata: Metadata = { title: "Grade" };
+export const metadata: Metadata = { title: "Corrigir" };
 
-const box = "rounded-lg border border-zinc-200 p-4 dark:border-zinc-800";
+const box = "rounded-lg border border-ink-200 p-4 dark:border-ink-800";
 
 /** The instructions the student saw, their answer, and the score + feedback form (also to revise). */
 export default async function GradePage({ params }: PageProps<"/grading/[id]">) {
@@ -29,38 +29,38 @@ export default async function GradePage({ params }: PageProps<"/grading/[id]">) 
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <Link href="/grading" className="text-sm text-zinc-500 hover:underline">← To grade</Link>
+        <Link href="/grading" className="text-sm text-ink-500 hover:underline">← Para corrigir</Link>
         <h1 className="flex flex-wrap items-center gap-3 text-2xl font-bold">
           {a.taskTitle} · {a.studentName}
           <AssignmentStatusBadge assignment={a} />
         </h1>
         {submission && (
-          <span className="text-sm text-zinc-500">
-            Submitted {formatDateTime(submission.submittedAt, zone)}
-            {submission.updatedAt !== submission.submittedAt && ` · last change ${formatDateTime(submission.updatedAt, zone)}`}
-            {a.dueAt && ` · due ${formatDateTime(a.dueAt, zone)}`}
+          <span className="text-sm text-ink-500">
+            Entregue em {formatDateTime(submission.submittedAt, zone)}
+            {submission.updatedAt !== submission.submittedAt && ` · última alteração em ${formatDateTime(submission.updatedAt, zone)}`}
+            {a.dueAt && ` · prazo: ${formatDateTime(a.dueAt, zone)}`}
           </span>
         )}
       </div>
 
       {!submission ? (
-        <p className="text-zinc-500">The student has not submitted an answer yet.</p>
+        <p className="text-ink-500">O aluno ainda não entregou a resposta.</p>
       ) : (
         <>
           <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">Instructions (as the student saw them)</h2>
+            <h2 className="text-lg font-semibold">Instruções (como o aluno viu)</h2>
             <div className={box}>
               <Markdown>{submission.instructionsSnapshot}</Markdown>
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">Answer</h2>
+            <h2 className="text-lg font-semibold">Resposta</h2>
             <div className={box}>
               <Markdown>{submission.answer}</Markdown>
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">{grade ? "Revise grade" : "Grade"}</h2>
+            <h2 className="text-lg font-semibold">{grade ? "Revisar nota" : "Nota"}</h2>
             <GradeForm id={a.id} version={submission.version} score={grade?.score} feedback={grade?.feedback} />
           </div>
         </>

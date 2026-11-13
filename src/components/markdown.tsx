@@ -12,14 +12,14 @@ const components: Components = {
   ul: ({ children }) => <ul className="my-2 list-disc pl-6">{children}</ul>,
   ol: ({ children }) => <ol className="my-2 list-decimal pl-6">{children}</ol>,
   a: ({ children, href }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer nofollow" className="text-indigo-600 underline">
+    <a href={href} target="_blank" rel="noopener noreferrer nofollow" className="text-brand-600 underline">
       {children}
     </a>
   ),
-  blockquote: ({ children }) => <blockquote className="my-2 border-l-4 border-zinc-300 pl-3 text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">{children}</blockquote>,
-  code: ({ children }) => <code className="rounded bg-zinc-100 px-1 py-0.5 font-mono text-[0.9em] dark:bg-zinc-800">{children}</code>,
-  pre: ({ children }) => <pre className="my-2 overflow-x-auto rounded bg-zinc-100 p-3 dark:bg-zinc-800">{children}</pre>,
-  img: ({ alt }) => <span className="text-zinc-500">[image: {alt}]</span>,
+  blockquote: ({ children }) => <blockquote className="my-2 border-l-4 border-ink-300 pl-3 text-ink-600 dark:border-ink-700 dark:text-ink-400">{children}</blockquote>,
+  code: ({ children }) => <code className="rounded bg-ink-100 px-1 py-0.5 font-mono text-[0.9em] dark:bg-ink-800">{children}</code>,
+  pre: ({ children }) => <pre className="my-2 overflow-x-auto rounded bg-ink-100 p-3 dark:bg-ink-800">{children}</pre>,
+  img: ({ alt }) => <span className="text-ink-500">[imagem: {alt}]</span>,
 };
 
 export function Markdown({ children }: { children: string }) {

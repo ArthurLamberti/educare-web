@@ -15,25 +15,25 @@ export function TaskForm({ task }: { task?: { id: number; title: string; instruc
   const title = state.values?.title ?? task?.title ?? "";
 
   const tab = (active: boolean) =>
-    `rounded-md px-3 py-1 text-xs font-medium ${active ? "bg-zinc-200 dark:bg-zinc-700" : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`;
+    `rounded-md px-3 py-1 text-xs font-bold ${active ? "bg-ink-200 dark:bg-ink-700" : "text-ink-500 hover:text-ink-800 dark:hover:text-ink-200"}`;
 
   return (
     <form action={formAction} className="flex max-w-2xl flex-col gap-4">
       <FormMessage message={state.message} />
 
-      <Field label="Title" error={state.errors?.title}>
+      <Field label="Título" error={state.errors?.title}>
         <input name="title" required maxLength={200} defaultValue={title} key={`t-${title}`} className={inputClass} />
       </Field>
 
-      <div className="flex flex-col gap-1 text-sm font-medium">
+      <div className="flex flex-col gap-1 text-sm font-bold">
         <div className="flex items-center gap-2">
-          <span id="instructions-label">Instructions</span>
+          <span id="instructions-label">Instruções</span>
           <span className="ml-auto flex gap-1" role="tablist">
             <button type="button" role="tab" aria-selected={!preview} onClick={() => setPreview(false)} className={tab(!preview)}>
-              Write
+              Escrever
             </button>
             <button type="button" role="tab" aria-selected={preview} onClick={() => setPreview(true)} className={tab(preview)}>
-              Preview
+              Visualizar
             </button>
           </span>
         </div>
@@ -50,22 +50,22 @@ export function TaskForm({ task }: { task?: { id: number; title: string; instruc
           className={`${inputClass} font-mono`}
         />
         {preview && (
-          <div className="min-h-48 rounded-md border border-zinc-300 px-3 py-2 font-normal dark:border-zinc-700">
-            {instructions.trim() ? <Markdown>{instructions}</Markdown> : <p className="text-zinc-500">Nothing to preview.</p>}
+          <div className="min-h-48 rounded-md border border-ink-300 px-3 py-2 font-normal dark:border-ink-700">
+            {instructions.trim() ? <Markdown>{instructions}</Markdown> : <p className="text-ink-500">Nada para visualizar.</p>}
           </div>
         )}
         {state.errors?.instructions && <span className="text-xs font-normal text-red-600">{state.errors.instructions}</span>}
-        <span className="text-xs font-normal text-zinc-500">
-          Markdown: **bold**, *italic*, lists with &quot;- &quot;, links [text](https://…). HTML is shown as text. {instructions.length}/10000
+        <span className="text-xs font-normal text-ink-500">
+          Markdown: **negrito**, *itálico*, listas com &quot;- &quot;, links [texto](https://…). HTML aparece como texto. {instructions.length}/10000
         </span>
       </div>
 
       <div className="flex gap-3">
         <button type="submit" disabled={pending} className={primaryButtonClass}>
-          {pending ? "Saving..." : "Save"}
+          {pending ? "Salvando..." : "Salvar"}
         </button>
-        <Link href={task ? `/tasks/${task.id}` : "/tasks"} className="rounded-md px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800">
-          Cancel
+        <Link href={task ? `/tasks/${task.id}` : "/tasks"} className="rounded-md px-4 py-2 text-sm font-bold text-ink-600 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800">
+          Cancelar
         </Link>
       </div>
     </form>

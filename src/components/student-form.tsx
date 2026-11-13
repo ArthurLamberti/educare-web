@@ -25,23 +25,23 @@ export function StudentForm({ student, teachers }: { student?: StudentValues; te
     <form action={formAction} className="flex max-w-lg flex-col gap-4">
       <FormMessage message={state.message} />
 
-      <Field label="Name" error={state.errors?.name}>
+      <Field label="Nome" error={state.errors?.name}>
         <input name="name" required maxLength={150} defaultValue={values.name} key={`name-${values.name}`} className={inputClass} />
       </Field>
 
-      <Field label="Email" error={state.errors?.email}>
+      <Field label="E-mail" error={state.errors?.email}>
         <input name="email" type="email" required maxLength={255} defaultValue={values.email} key={`email-${values.email}`} className={inputClass} />
       </Field>
 
-      <Field label="Birth date" error={state.errors?.birthDate}>
+      <Field label="Data de nascimento" error={state.errors?.birthDate}>
         <input name="birthDate" type="date" defaultValue={values.birthDate} key={`bd-${values.birthDate}`} className={inputClass} />
       </Field>
 
       {teachers && (
-        <Field label="Teacher" error={state.errors?.teacherId}>
+        <Field label="Professor" error={state.errors?.teacherId}>
           <select name="teacherId" required defaultValue={values.teacherId} key={`t-${values.teacherId}`} className={inputClass}>
             <option value="" disabled>
-              Choose a teacher
+              Escolha um professor
             </option>
             {teachers.map((t) => (
               <option key={t.id} value={t.id}>
@@ -53,18 +53,18 @@ export function StudentForm({ student, teachers }: { student?: StudentValues; te
       )}
 
       {!student && (
-        <Field label="Initial password" error={state.errors?.initialPassword}>
+        <Field label="Senha inicial" error={state.errors?.initialPassword}>
           <input name="initialPassword" type="password" required minLength={8} maxLength={72} autoComplete="new-password" className={inputClass} />
-          <span className="text-xs font-normal text-zinc-500">The student will be asked to change it on first login.</span>
+          <span className="text-xs font-normal text-ink-500">O aluno vai precisar trocá-la no primeiro acesso.</span>
         </Field>
       )}
 
       <div className="flex gap-3">
         <button type="submit" disabled={pending} className={primaryButtonClass}>
-          {pending ? "Saving..." : "Save"}
+          {pending ? "Salvando..." : "Salvar"}
         </button>
-        <Link href="/students" className="rounded-md px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800">
-          Cancel
+        <Link href="/students" className="rounded-md px-4 py-2 text-sm font-bold text-ink-600 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800">
+          Cancelar
         </Link>
       </div>
     </form>

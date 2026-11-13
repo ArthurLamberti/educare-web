@@ -18,7 +18,7 @@ export type TeacherFormState = {
 
 function failure(error: unknown, values: { name: string; email: string }): TeacherFormState {
   if (error instanceof ApiError) return { message: error.message, errors: error.problem.errors, values };
-  return { message: error instanceof Error ? error.message : "Unexpected error", values };
+  return { message: error instanceof Error ? error.message : "Erro inesperado", values };
 }
 
 export async function saveTeacher(id: number | null, _prev: TeacherFormState, formData: FormData): Promise<TeacherFormState> {

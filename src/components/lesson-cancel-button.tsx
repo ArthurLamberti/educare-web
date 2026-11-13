@@ -12,12 +12,12 @@ export function LessonCancelButton({ id, label }: { id: number; label: string })
       type="button"
       disabled={pending}
       onClick={() => {
-        if (!window.confirm(`Cancel the lesson "${label}"? The time becomes free again.`)) return;
+        if (!window.confirm(`Cancelar a aula "${label}"? O horário fica livre de novo.`)) return;
         startTransition(() => cancelLessonAction(id));
       }}
-      className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
+      className="text-sm font-bold text-red-600 hover:underline disabled:opacity-50"
     >
-      {pending ? "Canceling..." : "Cancel lesson"}
+      {pending ? "Cancelando..." : "Cancelar aula"}
     </button>
   );
 }

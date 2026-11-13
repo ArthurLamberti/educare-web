@@ -14,7 +14,7 @@ export type RequestFormState = ActionState & { values?: { date: string; time: st
 
 function failure(error: unknown): ActionState {
   if (error instanceof ApiError) return { message: error.message, errors: error.problem.errors };
-  return { message: error instanceof Error ? error.message : "Unexpected error" };
+  return { message: error instanceof Error ? error.message : "Erro inesperado" };
 }
 
 /** Student asks to move a lesson; date and time are read in the school's time zone. */
@@ -24,7 +24,7 @@ export async function requestChange(lessonId: number, _prev: RequestFormState, f
   const values = { date: text("date"), time: text("time"), reason: text("reason") };
   const proposed = zonedDateTimeToInstant(values.date, values.time, user.tenant.timeZone);
   if (!proposed) {
-    return { values, errors: { proposedStartsAt: "Enter a valid date and time (this time may not exist in the school's time zone)" } };
+    return { values, errors: { proposedStartsAt: "Informe uma data e um horário válidos (esse horário pode não existir no fuso da escola)" } };
   }
   try {
     await createRequest(lessonId, { proposedStartsAt: proposed.toISOString(), reason: values.reason || null });

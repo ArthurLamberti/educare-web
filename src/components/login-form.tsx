@@ -12,14 +12,14 @@ export function LoginForm({ next }: { next?: string }) {
     <form action={formAction} className="flex flex-col gap-4">
       <FormMessage message={state.message} />
       <input type="hidden" name="next" value={next ?? ""} />
-      <Field label="Email">
+      <Field label="E-mail">
         <input name="email" type="email" required autoComplete="username" defaultValue={state.email} key={state.email} className={inputClass} />
       </Field>
-      <Field label="Password">
+      <Field label="Senha">
         <input name="password" type="password" required autoComplete="current-password" className={inputClass} />
       </Field>
       <button type="submit" disabled={pending} className={primaryButtonClass}>
-        {pending ? "Logging in..." : "Log in"}
+        {pending ? "Entrando..." : "Entrar"}
       </button>
     </form>
   );

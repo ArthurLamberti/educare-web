@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { instantToZonedParts } from "@/lib/datetime";
 import { getLesson } from "@/lib/lessons";
 
-export const metadata: Metadata = { title: "Edit lesson" };
+export const metadata: Metadata = { title: "Editar aula" };
 
 export default async function EditLessonPage({ params }: PageProps<"/lessons/[id]/edit">) {
   const user = await requireUser(["TEACHER"]);
@@ -25,7 +25,7 @@ export default async function EditLessonPage({ params }: PageProps<"/lessons/[id
 
   return (
     <section className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">Edit lesson</h1>
+      <h1 className="text-2xl font-bold">Editar aula</h1>
       <LessonForm
         lesson={{ id: lesson.id, studentName: lesson.studentName, date, time, durationMinutes: lesson.durationMinutes, topic: lesson.topic, notes: lesson.notes }}
         timeZone={user.tenant.timeZone}

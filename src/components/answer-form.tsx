@@ -17,13 +17,13 @@ export function AnswerForm({ id, answer, submitted }: { id: number; answer: stri
       <FormMessage message={state.message} />
       {state.saved && (
         <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800 dark:bg-green-950 dark:text-green-300">
-          Answer saved. Your teacher will grade it.
+          Resposta salva. Seu professor vai corrigir.
         </p>
       )}
-      <MarkdownEditor name="answer" label="Your answer" initial={initial} maxLength={20000} rows={12} warnUnsaved error={state.error} />
+      <MarkdownEditor name="answer" label="Sua resposta" initial={initial} maxLength={20000} rows={12} warnUnsaved error={state.error} />
       <div>
         <button type="submit" disabled={pending} className={primaryButtonClass}>
-          {pending ? "Saving..." : submitted ? "Update answer" : "Submit"}
+          {pending ? "Salvando..." : submitted ? "Atualizar resposta" : "Enviar"}
         </button>
       </div>
     </form>

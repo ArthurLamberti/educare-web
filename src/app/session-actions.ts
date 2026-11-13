@@ -21,8 +21,8 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
       body: JSON.stringify({ email, password }),
     });
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return { message: "Invalid email or password", email };
-    return { message: error instanceof Error ? error.message : "Unexpected error", email };
+    if (error instanceof ApiError && error.status === 401) return { message: "E-mail ou senha inválidos", email };
+    return { message: error instanceof Error ? error.message : "Erro inesperado", email };
   }
   await setSessionToken(result.token, result.expiresAt);
   redirect(result.user.mustChangePassword ? "/change-password" : safeNextPath(formData.get("next")));
@@ -44,7 +44,7 @@ export async function changePassword(_prev: ChangePasswordState, formData: FormD
   const newPassword = String(formData.get("newPassword") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
   if (newPassword !== confirmPassword) {
-    return { errors: { confirmPassword: "Passwords do not match" } };
+    return { errors: { confirmPassword: "As senhas não conferem" } };
   }
   try {
     await apiFetch("/api/auth/change-password", {
@@ -53,7 +53,7 @@ export async function changePassword(_prev: ChangePasswordState, formData: FormD
     });
   } catch (error) {
     if (error instanceof ApiError) return { message: error.message, errors: error.problem.errors };
-    return { message: error instanceof Error ? error.message : "Unexpected error" };
+    return { message: error instanceof Error ? error.message : "Erro inesperado" };
   }
   redirect("/");
 }

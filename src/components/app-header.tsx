@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { NavLink } from "@/components/nav-link";
 import { logout } from "@/app/session-actions";
 import { getCurrentUser, getSchool, type Role } from "@/lib/auth";
 import { countToGrade } from "@/lib/assignments";
@@ -7,27 +8,27 @@ import { countPendingRequests } from "@/lib/reschedule-requests";
 
 const NAV: Record<Role, { href: string; label: string }[]> = {
   ADMIN: [
-    { href: "/teachers", label: "Teachers" },
-    { href: "/students", label: "Students" },
-    { href: "/lessons", label: "Lessons" },
-    { href: "/requests", label: "Requests" },
-    { href: "/assignments", label: "Assignments" },
-    { href: "/decks", label: "Flashcards" },
+    { href: "/teachers", label: "Professores" },
+    { href: "/students", label: "Alunos" },
+    { href: "/lessons", label: "Aulas" },
+    { href: "/requests", label: "Solicitações" },
+    { href: "/assignments", label: "Atividades" },
+    { href: "/flashcards", label: "Flashcards" },
   ],
   TEACHER: [
-    { href: "/students", label: "Students" },
-    { href: "/lessons", label: "Lessons" },
-    { href: "/requests", label: "Requests" },
-    { href: "/tasks", label: "Tasks" },
-    { href: "/assignments", label: "Assignments" },
-    { href: "/grading", label: "To grade" },
-    { href: "/decks", label: "Flashcards" },
+    { href: "/students", label: "Alunos" },
+    { href: "/lessons", label: "Aulas" },
+    { href: "/requests", label: "Solicitações" },
+    { href: "/tasks", label: "Tarefas" },
+    { href: "/assignments", label: "Atividades" },
+    { href: "/grading", label: "Para corrigir" },
+    { href: "/flashcards", label: "Flashcards" },
   ],
   STUDENT: [
-    { href: "/lessons", label: "Lessons" },
-    { href: "/assignments", label: "Assignments" },
-    { href: "/decks", label: "Flashcards" },
-    { href: "/requests", label: "My requests" },
+    { href: "/lessons", label: "Aulas" },
+    { href: "/assignments", label: "Atividades" },
+    { href: "/flashcards", label: "Flashcards" },
+    { href: "/requests", label: "Meus pedidos" },
   ],
 };
 
@@ -40,36 +41,32 @@ export async function AppHeader() {
   const counters: Record<string, number> = { "/requests": pending, "/grading": toGrade };
 
   return (
-    <nav className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-4">
-      <Link href="/" className="text-lg font-bold text-indigo-600">
-        Educare
-      </Link>
-      {school && <span className="text-sm text-zinc-500">{school.name}</span>}
-      {user &&
-        !user.mustChangePassword &&
-        NAV[user.role].map((item) => (
-          <Link key={item.href} href={item.href} className="flex items-center gap-1.5 text-sm font-medium hover:text-indigo-600">
-            {item.label}
-            {(counters[item.href] ?? 0) > 0 && (
-              <span aria-label={`${counters[item.href]} pending`} className="rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white">
-                {counters[item.href]}
-              </span>
-            )}
-          </Link>
-        ))}
+    <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3">
+      <Wordmark school={school?.name} />
+      {user && !user.mustChangePassword && (
+        <div className="order-last flex w-full gap-5 overflow-x-auto sm:order-none sm:w-auto">
+          {NAV[user.role].map((item) => (
+            <NavLink key={item.href} href={item.href} label={item.label} count={counters[item.href] ?? 0} />
+          ))}
+        </div>
+      )}
       {user && (
         <details className="relative ml-auto">
-          <summary className="cursor-pointer list-none text-sm font-medium hover:text-indigo-600">
-            {user.name} ▾
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-brand-100 hover:text-white">
+            <span aria-hidden className="grid size-7 place-items-center rounded-full bg-brand-600 text-xs font-bold text-white">
+              {initials(user.name)}
+            </span>
+            <span className="hidden md:inline">{user.name}</span>
           </summary>
-          <div className="absolute right-0 z-10 mt-2 flex w-48 flex-col rounded-md border border-zinc-200 bg-white py-1 text-sm shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
-            <span className="px-3 py-2 text-xs text-zinc-500">{user.email}</span>
-            <Link href="/change-password" className="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800">
-              Change password
+          <div className="absolute right-0 z-10 mt-2 flex w-56 flex-col rounded-md border border-ink-200 bg-white py-1 text-sm text-ink-900 shadow-lg dark:border-ink-800 dark:bg-ink-900 dark:text-ink-100">
+            <span className="px-3 pt-2 font-bold">{user.name}</span>
+            <span className="px-3 pb-2 text-xs text-ink-500">{user.email}</span>
+            <Link href="/change-password" className="border-t border-ink-100 px-3 py-2 hover:bg-ink-50 dark:border-ink-800 dark:hover:bg-ink-800">
+              Alterar senha
             </Link>
             <form action={logout}>
-              <button type="submit" className="w-full px-3 py-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                Log out
+              <button type="submit" className="w-full px-3 py-2 text-left hover:bg-ink-50 dark:hover:bg-ink-800">
+                Sair
               </button>
             </form>
           </div>
@@ -79,10 +76,24 @@ export async function AppHeader() {
   );
 }
 
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+}
+
+function Wordmark({ school }: { school?: string }) {
+  return (
+    <Link href="/" className="flex items-baseline gap-3">
+      <span className="font-display text-xl font-semibold tracking-tight text-white">Educare</span>
+      {school && <span className="hidden text-sm text-brand-200 sm:inline">{school}</span>}
+    </Link>
+  );
+}
+
 export function AppHeaderFallback() {
   return (
-    <nav className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-4">
-      <span className="text-lg font-bold text-indigo-600">Educare</span>
+    <nav className="mx-auto flex max-w-5xl items-center px-6 py-3">
+      <Wordmark />
     </nav>
   );
 }

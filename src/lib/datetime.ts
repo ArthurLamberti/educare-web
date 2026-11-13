@@ -79,14 +79,14 @@ export function formatTime(instant: string, zone: string) {
   return instantToZonedParts(instant, zone).time;
 }
 
-/** e.g. "Tue, Nov 17, 2026". */
+/** e.g. "ter., 17 de nov. de 2026". */
 export function formatDay(instant: string, zone: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: zone, weekday: "short", month: "short", day: "numeric", year: "numeric" }).format(
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: zone, weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(
     new Date(instant),
   );
 }
 
-/** e.g. "Tue, Nov 17, 2026, 14:00". */
+/** e.g. "ter., 17 de nov. de 2026, 14:00". */
 export function formatDateTime(instant: string, zone: string) {
-  return `${formatDay(instant, zone)}, ${formatTime(instant, zone)}`;
+  return `${formatDay(instant, zone)}, às ${formatTime(instant, zone)}`;
 }

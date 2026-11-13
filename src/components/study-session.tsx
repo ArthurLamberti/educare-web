@@ -9,10 +9,10 @@ import { formatDateTime } from "@/lib/datetime";
 import type { Queue, QueueCard, Rating } from "@/lib/reviews";
 
 const RATINGS: { rating: Rating; label: string; key: string; className: string }[] = [
-  { rating: "AGAIN", label: "Again", key: "1", className: "bg-red-600 hover:bg-red-500" },
-  { rating: "HARD", label: "Hard", key: "2", className: "bg-amber-600 hover:bg-amber-500" },
-  { rating: "GOOD", label: "Good", key: "3", className: "bg-green-600 hover:bg-green-500" },
-  { rating: "EASY", label: "Easy", key: "4", className: "bg-sky-600 hover:bg-sky-500" },
+  { rating: "AGAIN", label: "De novo", key: "1", className: "bg-pen hover:bg-red-600" },
+  { rating: "HARD", label: "Difícil", key: "2", className: "bg-amber-700 hover:bg-amber-600" },
+  { rating: "GOOD", label: "Bom", key: "3", className: "bg-brand-600 hover:bg-brand-500" },
+  { rating: "EASY", label: "Fácil", key: "4", className: "bg-sky-700 hover:bg-sky-600" },
 ];
 
 /**
@@ -20,7 +20,7 @@ const RATINGS: { rating: Rating; label: string; key: string; className: string }
  * before the next card shows; a failed save keeps the card. Cards rated Again go back to the end of the
  * session. When the local queue runs out, a fresh queue is fetched (it brings any card due by then).
  */
-export function StudySession({ initial, deckId, timeZone }: { initial: Queue; deckId: number | null; timeZone: string }) {
+export function StudySession({ initial, timeZone }: { initial: Queue; timeZone: string }) {
   const [queue, setQueue] = useState<QueueCard[]>(initial.cards);
   const [revealed, setRevealed] = useState(false);
   const [reviewed, setReviewed] = useState(0);
@@ -35,7 +35,7 @@ export function StudySession({ initial, deckId, timeZone }: { initial: Queue; de
       startTransition(async () => {
         const { result, message } = await rateAction(card.cardId, rating);
         if (!result) {
-          setMessage(message ?? "Could not save the rating");
+          setMessage(message ?? "Não foi possível salvar a avaliação");
           return;
         }
         setMessage(undefined);
@@ -44,7 +44,7 @@ export function StudySession({ initial, deckId, timeZone }: { initial: Queue; de
         let rest = queue.slice(1);
         if (rating === "AGAIN") rest = [...rest, { ...card, isNew: false, dueAt: result.dueAt }];
         if (rest.length === 0) {
-          const fresh = await queueAction(deckId);
+          const fresh = await queueAction();
           if ("message" in fresh) setMessage(fresh.message);
           else {
             rest = fresh.cards;
@@ -54,7 +54,7 @@ export function StudySession({ initial, deckId, timeZone }: { initial: Queue; de
         setQueue(rest);
       });
     },
-    [card, revealed, pending, queue, deckId],
+    [card, revealed, pending, queue],
   );
 
   useEffect(() => {
@@ -77,43 +77,39 @@ export function StudySession({ initial, deckId, timeZone }: { initial: Queue; de
 
   if (!card) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-lg border border-zinc-200 p-10 text-center dark:border-zinc-800">
-        <h2 className="text-xl font-semibold">All done for today</h2>
-        {reviewed > 0 && <p>Session finished: {reviewed} {reviewed === 1 ? "review" : "reviews"}.</p>}
-        <p className="text-sm text-zinc-500">
-          {nextDueAt ? `Next card due ${formatDateTime(nextDueAt, timeZone)}.` : "No cards scheduled yet."}
+      <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 rounded-md border border-ink-200 bg-white p-10 text-center dark:border-ink-800 dark:bg-ink-900">
+        <h2 className="text-2xl">Tudo feito por hoje</h2>
+        {reviewed > 0 && <p>Sessão concluída: {reviewed} {reviewed === 1 ? "revisão" : "revisões"}.</p>}
+        <p className="text-sm text-ink-500">
+          {nextDueAt ? `Próximo cartão em ${formatDateTime(nextDueAt, timeZone)}.` : "Nenhum cartão agendado ainda."}
         </p>
         <FormMessage message={message} />
-        <Link href="/decks" className="text-sm font-medium text-indigo-600 hover:underline">
-          Back to flashcards
+        <Link href="/flashcards" className="text-sm font-bold text-brand-600 hover:underline">
+          Voltar aos flashcards
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between text-sm text-zinc-500">
-        <span>
-          {queue.length} remaining · {reviewed} reviewed
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
+      <div className="flex items-center justify-between text-sm text-ink-500">
+        <span className="tabular-nums">
+          {queue.length} {queue.length === 1 ? "restante" : "restantes"}, {reviewed} {reviewed === 1 ? "revisado" : "revisados"}
         </span>
         <span>
-          {card.deckTitle}
-          {card.isNew && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">New</span>}
+          {card.isNew && <span className="ml-2 rounded-sm bg-highlight px-1.5 py-0.5 text-xs font-bold text-ink-900 dark:bg-brand-950 dark:text-brand-300">Novo</span>}
         </span>
       </div>
 
-      <div className="flex min-h-64 flex-col items-center justify-center gap-6 rounded-lg border border-zinc-200 p-8 text-center dark:border-zinc-800" aria-live="polite">
-        <p className="text-2xl font-semibold break-words whitespace-pre-wrap">{card.front}</p>
-        {revealed && (
-          <>
-            <hr className="w-full border-zinc-200 dark:border-zinc-800" />
-            <p className="text-xl break-words whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">{card.back}</p>
-          </>
-        )}
+      <div key={card.cardId} className="index-card flex min-h-80 flex-col px-8 pb-8" aria-live="polite">
+        <p className="flex min-h-[4.5rem] items-center py-3 font-display text-2xl leading-tight font-semibold break-words whitespace-pre-wrap">
+          {card.front}
+        </p>
+        {revealed && <p className="pt-[0.35rem] text-xl leading-7 break-words whitespace-pre-wrap text-ink-700 dark:text-ink-300">{card.back}</p>}
       </div>
 
-      <FormMessage message={message && `${message}. Try again.`} />
+      <FormMessage message={message && `${message}. Tente de novo.`} />
 
       {revealed ? (
         <div className="grid grid-cols-4 gap-2">
@@ -124,7 +120,7 @@ export function StudySession({ initial, deckId, timeZone }: { initial: Queue; de
               disabled={pending}
               onClick={() => rate(r.rating)}
               aria-keyshortcuts={r.key}
-              className={`rounded-md px-3 py-3 text-sm font-medium text-white disabled:opacity-50 ${r.className}`}
+              className={`rounded-md px-3 py-3 text-sm font-bold text-white disabled:opacity-50 ${r.className}`}
             >
               {r.label} <kbd className="ml-1 text-xs opacity-75">{r.key}</kbd>
             </button>
@@ -136,9 +132,9 @@ export function StudySession({ initial, deckId, timeZone }: { initial: Queue; de
           autoFocus
           onClick={() => setRevealed(true)}
           aria-keyshortcuts="Space"
-          className="rounded-md bg-indigo-600 px-4 py-3 text-sm font-medium text-white hover:bg-indigo-500"
+          className="rounded-md bg-brand-600 px-4 py-3 text-sm font-bold text-white hover:bg-brand-500"
         >
-          Show answer <kbd className="ml-1 text-xs opacity-75">Space</kbd>
+          Mostrar resposta <kbd className="ml-1 text-xs opacity-75">Espaço</kbd>
         </button>
       )}
     </div>

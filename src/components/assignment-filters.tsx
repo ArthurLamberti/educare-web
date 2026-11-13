@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-const selectClass = "rounded-md border border-zinc-300 bg-white px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900";
+const selectClass = "rounded-md border border-ink-300 bg-white px-2 py-1 dark:border-ink-700 dark:bg-ink-900";
 
 /** Student and status filters kept in the URL (`?studentId=&status=`). */
 export function AssignmentFilters({ students }: { students: { id: number; name: string }[] }) {
@@ -22,9 +22,9 @@ export function AssignmentFilters({ students }: { students: { id: number; name: 
   return (
     <div className="flex flex-wrap items-center gap-4 text-sm">
       <label className="flex items-center gap-2">
-        Student
+        Aluno
         <select value={searchParams.get("studentId") ?? ""} onChange={(e) => update("studentId", e.target.value)} className={selectClass}>
-          <option value="">All students</option>
+          <option value="">Todos os alunos</option>
           {students.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -33,12 +33,12 @@ export function AssignmentFilters({ students }: { students: { id: number; name: 
         </select>
       </label>
       <label className="flex items-center gap-2">
-        Status
+        Situação
         <select value={searchParams.get("status") ?? ""} onChange={(e) => update("status", e.target.value)} className={selectClass}>
-          <option value="">All</option>
-          <option value="ASSIGNED">Assigned</option>
-          <option value="SUBMITTED">Submitted</option>
-          <option value="GRADED">Graded</option>
+          <option value="">Todas</option>
+          <option value="ASSIGNED">Atribuída</option>
+          <option value="SUBMITTED">Entregue</option>
+          <option value="GRADED">Corrigida</option>
         </select>
       </label>
     </div>

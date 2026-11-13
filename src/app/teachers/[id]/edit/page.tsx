@@ -6,7 +6,7 @@ import { ApiError } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { getTeacher } from "@/lib/teachers";
 
-export const metadata: Metadata = { title: "Edit teacher" };
+export const metadata: Metadata = { title: "Editar professor" };
 
 export default async function EditTeacherPage({ params }: PageProps<"/teachers/[id]/edit">) {
   await requireUser(["ADMIN"]);
@@ -21,7 +21,7 @@ export default async function EditTeacherPage({ params }: PageProps<"/teachers/[
 
   return (
     <section className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">Edit teacher</h1>
+      <h1 className="text-2xl font-bold">Editar professor</h1>
       <TeacherForm teacher={teacher} />
     </section>
   );

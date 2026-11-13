@@ -26,7 +26,7 @@ export async function saveTask(id: number | null, _prev: TaskFormState, formData
     else await updateTask(id, values);
   } catch (error) {
     if (error instanceof ApiError) return { message: error.message, errors: error.problem.errors, values };
-    return { message: error instanceof Error ? error.message : "Unexpected error", values };
+    return { message: error instanceof Error ? error.message : "Erro inesperado", values };
   }
   redirect(`/tasks/${taskId}${id === null ? "?created=1" : ""}`);
 }
@@ -70,12 +70,12 @@ export async function assignTaskAction(taskId: number, _prev: AssignFormState, f
     date: String(formData.get("date") ?? "").trim(),
     time: String(formData.get("time") ?? "").trim() || "23:59",
   };
-  if (values.studentIds.length === 0) return { values, errors: { studentIds: "Choose at least one student" } };
+  if (values.studentIds.length === 0) return { values, errors: { studentIds: "Escolha pelo menos um aluno" } };
 
   let dueAt: string | null = null;
   if (values.date) {
     const instant = zonedDateTimeToInstant(values.date, values.time, user.tenant.timeZone);
-    if (!instant) return { values, errors: { dueAt: "Enter a valid date and time (this time may not exist in the school's time zone)" } };
+    if (!instant) return { values, errors: { dueAt: "Informe uma data e um horário válidos (esse horário pode não existir no fuso da escola)" } };
     dueAt = instant.toISOString();
   }
 
@@ -84,7 +84,7 @@ export async function assignTaskAction(taskId: number, _prev: AssignFormState, f
     created = (await assignTask(taskId, { studentIds: values.studentIds.map(Number), dueAt })).length;
   } catch (error) {
     if (error instanceof ApiError) return { message: error.message, errors: error.problem.errors, values };
-    return { message: error instanceof Error ? error.message : "Unexpected error", values };
+    return { message: error instanceof Error ? error.message : "Erro inesperado", values };
   }
   refresh();
   return { assigned: created };

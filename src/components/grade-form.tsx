@@ -19,14 +19,14 @@ export function GradeForm({ id, version, score, feedback }: { id: number; versio
       {stale ? (
         <div role="alert" className="flex flex-wrap items-center gap-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-300">
           {state.message}
-          <Link href={`/grading/${id}`} className="font-medium underline">
-            Reload
+          <Link href={`/grading/${id}`} className="font-bold underline">
+            Recarregar
           </Link>
         </div>
       ) : (
         <FormMessage message={reloaded ? undefined : state.message} />
       )}
-      <Field label="Score (0-10)" error={state.errors?.score}>
+      <Field label="Nota (0-10)" error={state.errors?.score}>
         <input
           name="score"
           type="number"
@@ -39,13 +39,13 @@ export function GradeForm({ id, version, score, feedback }: { id: number; versio
           className={`${inputClass} max-w-32`}
         />
       </Field>
-      <MarkdownEditor name="feedback" label="Feedback" initial={state.values?.feedback ?? feedback ?? ""} maxLength={10000} rows={8} error={state.errors?.feedback} />
+      <MarkdownEditor name="feedback" label="Comentário" initial={state.values?.feedback ?? feedback ?? ""} maxLength={10000} rows={8} error={state.errors?.feedback} />
       <div className="flex gap-3">
         <button type="submit" disabled={pending} className={primaryButtonClass}>
-          {pending ? "Saving..." : score === undefined ? "Save grade" : "Update grade"}
+          {pending ? "Salvando..." : score === undefined ? "Salvar nota" : "Atualizar nota"}
         </button>
-        <Link href="/grading" className="rounded-md px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800">
-          Back to queue
+        <Link href="/grading" className="rounded-md px-4 py-2 text-sm font-bold text-ink-600 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800">
+          Voltar para a fila
         </Link>
       </div>
     </form>

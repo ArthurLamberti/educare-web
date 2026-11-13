@@ -65,7 +65,7 @@ export async function apiFetch<T>(path: string, { auth = true, ...init }: ApiIni
       },
     });
   } catch (cause) {
-    throw new Error(`Could not connect to the API at ${API_URL}`, { cause });
+    throw new Error(`Não foi possível conectar à API em ${API_URL}`, { cause });
   }
 
   if (!response.ok) {

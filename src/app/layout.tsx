@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Atkinson_Hyperlegible, Geist_Mono, Literata } from "next/font/google";
 import { Suspense } from "react";
 
 import { AppHeader, AppHeaderFallback } from "@/components/app-header";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const body = Atkinson_Hyperlegible({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+const literata = Literata({
+  variable: "--font-literata",
   subsets: ["latin"],
 });
 
@@ -17,19 +23,19 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: { default: "Educare", template: "%s | Educare" },
-  description: "Educare platform",
+  description: "Aulas, lição de casa e flashcards para o ensino individual.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${body.variable} ${literata.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        <header className="border-b border-zinc-200 dark:border-zinc-800">
+        <header className="bg-brand-800 text-brand-50 dark:bg-brand-950">
           <Suspense fallback={<AppHeaderFallback />}>
             <AppHeader />
           </Suspense>
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>
+        <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">{children}</main>
       </body>
     </html>
   );

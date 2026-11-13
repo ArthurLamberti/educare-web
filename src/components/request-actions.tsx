@@ -17,23 +17,23 @@ export function RequestDecision({ id }: { id: number }) {
       <FormMessage message={approveState.message ?? rejectState.message} />
       <div className="flex flex-wrap items-start gap-3">
         <form action={approve}>
-          <button type="submit" disabled={busy} className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-50">
-            {approving ? "Approving..." : "Approve"}
+          <button type="submit" disabled={busy} className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-green-500 disabled:opacity-50">
+            {approving ? "Aprovando..." : "Aprovar"}
           </button>
         </form>
         {rejectOpen ? (
           <form action={reject} className="flex flex-1 flex-wrap items-start gap-2">
-            <input name="note" maxLength={500} placeholder="Note for the student (optional)" aria-label="Rejection note" className={`${inputClass} min-w-56 flex-1`} />
-            <button type="submit" disabled={busy} className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50">
-              {rejecting ? "Rejecting..." : "Confirm reject"}
+            <input name="note" maxLength={500} placeholder="Recado para o aluno (opcional)" aria-label="Motivo da recusa" className={`${inputClass} min-w-56 flex-1`} />
+            <button type="submit" disabled={busy} className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-red-500 disabled:opacity-50">
+              {rejecting ? "Recusando..." : "Confirmar recusa"}
             </button>
-            <button type="button" onClick={() => setRejectOpen(false)} className="px-2 py-1.5 text-sm text-zinc-500 hover:underline">
-              Back
+            <button type="button" onClick={() => setRejectOpen(false)} className="px-2 py-1.5 text-sm text-ink-500 hover:underline">
+              Voltar
             </button>
           </form>
         ) : (
-          <button type="button" disabled={busy} onClick={() => setRejectOpen(true)} className="rounded-md px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-950">
-            Reject
+          <button type="button" disabled={busy} onClick={() => setRejectOpen(true)} className="rounded-md px-3 py-1.5 text-sm font-bold text-red-600 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-950">
+            Recusar
           </button>
         )}
       </div>
@@ -52,12 +52,12 @@ export function WithdrawButton({ id }: { id: number }) {
         type="button"
         disabled={pending}
         onClick={() => {
-          if (!window.confirm("Withdraw this request? The lesson keeps its current time.")) return;
+          if (!window.confirm("Desistir deste pedido? A aula continua no horário atual.")) return;
           startTransition(async () => setMessage((await withdrawAction(id)).message));
         }}
-        className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
+        className="text-sm font-bold text-red-600 hover:underline disabled:opacity-50"
       >
-        {pending ? "Withdrawing..." : "Withdraw"}
+        {pending ? "Desistindo..." : "Desistir"}
       </button>
       {message && <span className="text-xs text-red-600">{message}</span>}
     </div>

@@ -4,11 +4,11 @@ import { Suspense } from "react";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { requireUser } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "Change password" };
+export const metadata: Metadata = { title: "Alterar senha" };
 
 export default function ChangePasswordPage() {
   return (
-    <Suspense fallback={<p className="text-zinc-500">Loading...</p>}>
+    <Suspense fallback={<p className="text-ink-500">Carregando...</p>}>
       <ChangePassword />
     </Suspense>
   );
@@ -19,10 +19,10 @@ async function ChangePassword() {
   return (
     <section className="mx-auto flex w-full max-w-sm flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold">Change password</h1>
+        <h1 className="text-2xl font-bold">Alterar senha</h1>
         {user.mustChangePassword && (
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            You are using a temporary password. Choose a new one to continue.
+          <p className="mt-1 text-sm text-ink-600 dark:text-ink-400">
+            Você está usando uma senha temporária. Escolha uma nova para continuar.
           </p>
         )}
       </div>

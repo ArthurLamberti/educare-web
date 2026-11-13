@@ -44,7 +44,7 @@ export async function saveStudent(id: number | null, _prev: StudentFormState, fo
       teacherId: data.teacherId ? String(data.teacherId) : "",
     };
     if (error instanceof ApiError) return { message: error.message, errors: error.problem.errors, values };
-    return { message: error instanceof Error ? error.message : "Unexpected error", values };
+    return { message: error instanceof Error ? error.message : "Erro inesperado", values };
   }
   redirect(id === null ? "/students?created=1" : "/students");
 }

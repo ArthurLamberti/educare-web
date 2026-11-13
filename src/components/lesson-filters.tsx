@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type Option = { id: number; name: string };
 
-const selectClass = "rounded-md border border-zinc-300 bg-white px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900";
+const selectClass = "rounded-md border border-ink-300 bg-white px-2 py-1 dark:border-ink-700 dark:bg-ink-900";
 
 /** Admin filters kept in the URL (`?teacherId=&studentId=`), next to the current tab. */
 export function LessonFilters({ teachers, students }: { teachers: Option[]; students: Option[] }) {
@@ -25,9 +25,9 @@ export function LessonFilters({ teachers, students }: { teachers: Option[]; stud
   return (
     <div className="flex flex-wrap items-center gap-4 text-sm">
       <label className="flex items-center gap-2">
-        Teacher
+        Professor
         <select value={searchParams.get("teacherId") ?? ""} onChange={(e) => update("teacherId", e.target.value)} className={selectClass}>
-          <option value="">All teachers</option>
+          <option value="">Todos os professores</option>
           {teachers.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
@@ -36,9 +36,9 @@ export function LessonFilters({ teachers, students }: { teachers: Option[]; stud
         </select>
       </label>
       <label className="flex items-center gap-2">
-        Student
+        Aluno
         <select value={searchParams.get("studentId") ?? ""} onChange={(e) => update("studentId", e.target.value)} className={selectClass}>
-          <option value="">All students</option>
+          <option value="">Todos os alunos</option>
           {students.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}

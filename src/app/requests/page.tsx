@@ -6,16 +6,16 @@ import { requireUser, type Role } from "@/lib/auth";
 import { formatDateTime, formatTime } from "@/lib/datetime";
 import { listRequests, type RequestStatus, type RescheduleRequest } from "@/lib/reschedule-requests";
 
-export const metadata: Metadata = { title: "Change requests" };
+export const metadata: Metadata = { title: "Pedidos de remarcação" };
 
 const PAGE_SIZE = 20;
 
 const STATUS: Record<RequestStatus, { label: string; className: string }> = {
-  PENDING: { label: "Pending", className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" },
-  APPROVED: { label: "Approved", className: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300" },
-  REJECTED: { label: "Rejected", className: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300" },
-  WITHDRAWN: { label: "Withdrawn", className: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300" },
-  CANCELED: { label: "Canceled", className: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300" },
+  PENDING: { label: "Pendente", className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" },
+  APPROVED: { label: "Aprovado", className: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300" },
+  REJECTED: { label: "Recusado", className: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300" },
+  WITHDRAWN: { label: "Desistido", className: "bg-ink-100 text-ink-700 dark:bg-ink-800 dark:text-ink-300" },
+  CANCELED: { label: "Cancelado", className: "bg-ink-100 text-ink-700 dark:bg-ink-800 dark:text-ink-300" },
 };
 
 /**
@@ -37,20 +37,20 @@ export default async function RequestsPage({ searchParams }: PageProps<"/request
 
   return (
     <section className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">Change requests</h1>
+      <h1 className="text-2xl font-bold">Pedidos de remarcação</h1>
 
       {created && (
         <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800 dark:bg-green-950 dark:text-green-300">
-          Request sent. Your teacher will approve or reject it.
+          Pedido enviado. Seu professor vai aprovar ou recusar.
         </p>
       )}
-      <p className="text-xs text-zinc-500">Times in the school&apos;s time zone ({zone.replaceAll("_", " ")}).</p>
+      <p className="text-xs text-ink-500">Horários no fuso da escola ({zone.replaceAll("_", " ")}).</p>
 
       {pending && (
         <div className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">Pending ({pending.totalElements})</h2>
+          <h2 className="text-lg font-semibold">Pendentes ({pending.totalElements})</h2>
           {pending.content.length === 0 ? (
-            <p className="text-sm text-zinc-500">No requests waiting for you.</p>
+            <p className="text-sm text-ink-500">Nenhum pedido esperando por você.</p>
           ) : (
             <ul className="flex flex-col gap-3">
               {pending.content.map((r) => (
@@ -58,18 +58,18 @@ export default async function RequestsPage({ searchParams }: PageProps<"/request
               ))}
             </ul>
           )}
-          <h2 className="mt-4 text-lg font-semibold">Decided</h2>
+          <h2 className="mt-4 text-lg font-semibold">Decididos</h2>
         </div>
       )}
 
       {history.length === 0 ? (
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-ink-500">
           {user.role === "STUDENT" ? (
             <>
-              No requests yet. To ask for a new time, open your <Link href="/lessons" className="text-indigo-600 hover:underline">upcoming lessons</Link>.
+              Nenhum pedido ainda. Para pedir um novo horário, abra suas <Link href="/lessons" className="text-brand-600 hover:underline">próximas aulas</Link>.
             </>
           ) : (
-            "No requests."
+            "Nenhum pedido."
           )}
         </p>
       ) : (
@@ -82,12 +82,12 @@ export default async function RequestsPage({ searchParams }: PageProps<"/request
 
       {all.totalPages > 1 && (
         <div className="flex items-center justify-between text-sm">
-          <span className="text-zinc-500">
-            Page {all.number + 1} of {all.totalPages}
+          <span className="text-ink-500">
+            Página {all.number + 1} de {all.totalPages}
           </span>
           <div className="flex gap-2">
-            {all.number > 0 && <Link href={`/requests?page=${all.number - 1}`} className="hover:underline">← Previous</Link>}
-            {all.number + 1 < all.totalPages && <Link href={`/requests?page=${all.number + 1}`} className="hover:underline">Next →</Link>}
+            {all.number > 0 && <Link href={`/requests?page=${all.number - 1}`} className="hover:underline">← Anterior</Link>}
+            {all.number + 1 < all.totalPages && <Link href={`/requests?page=${all.number + 1}`} className="hover:underline">Próxima →</Link>}
           </div>
         </div>
       )}
@@ -99,30 +99,30 @@ function RequestItem({ request: r, role, zone }: { request: RescheduleRequest; r
   const status = STATUS[r.status];
   const minutes = r.durationMinutes * 60 * 1000;
   const range = (start: string) => `${formatDateTime(start, zone)}–${formatTime(new Date(new Date(start).getTime() + minutes).toISOString(), zone)}`;
-  const who = role === "TEACHER" ? r.studentName : role === "STUDENT" ? `with ${r.teacherName}` : `${r.teacherName} → ${r.studentName}`;
+  const who = role === "TEACHER" ? r.studentName : role === "STUDENT" ? `com ${r.teacherName}` : `${r.teacherName} → ${r.studentName}`;
 
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-800">
+    <li className="flex flex-col gap-2 rounded-lg border border-ink-200 p-4 text-sm dark:border-ink-800">
       <div className="flex flex-wrap items-center gap-3">
-        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}>{status.label}</span>
-        <span className="font-medium">{r.lessonTopic}</span>
-        <span className="text-zinc-600 dark:text-zinc-400">{who}</span>
-        <span className="ml-auto text-xs text-zinc-500">requested {formatDateTime(r.createdAt, zone)}</span>
+        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${status.className}`}>{status.label}</span>
+        <span className="font-bold">{r.lessonTopic}</span>
+        <span className="text-ink-600 dark:text-ink-400">{who}</span>
+        <span className="ml-auto text-xs text-ink-500">pedido em {formatDateTime(r.createdAt, zone)}</span>
       </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-        <dt className="text-zinc-500">{r.status === "APPROVED" ? "Was" : r.status === "PENDING" ? "Current time" : "Original time"}</dt>
+        <dt className="text-ink-500">{r.status === "APPROVED" ? "Era" : r.status === "PENDING" ? "Horário atual" : "Horário original"}</dt>
         <dd>{range(r.originalStartsAt)}</dd>
-        <dt className="text-zinc-500">{r.status === "APPROVED" ? "Moved to" : "Proposed"}</dt>
-        <dd className="font-medium">{range(r.proposedStartsAt)}</dd>
+        <dt className="text-ink-500">{r.status === "APPROVED" ? "Remarcada para" : "Proposto"}</dt>
+        <dd className="font-bold">{range(r.proposedStartsAt)}</dd>
         {r.reason && (
           <>
-            <dt className="text-zinc-500">Reason</dt>
+            <dt className="text-ink-500">Motivo</dt>
             <dd>{r.reason}</dd>
           </>
         )}
         {r.decisionNote && (
           <>
-            <dt className="text-zinc-500">Teacher&apos;s note</dt>
+            <dt className="text-ink-500">Recado do professor</dt>
             <dd>{r.decisionNote}</dd>
           </>
         )}

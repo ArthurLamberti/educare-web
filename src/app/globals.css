@@ -1,26 +1,135 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Educare visual language: chalkboard green on cool paper, a highlighter
+ * yellow for "needs you" counters and the red of a grading pen for errors.
+ * `ink` is the neutral scale (green-grey), `brand` the chalkboard green.
+ */
+@theme {
+  --color-ink-50: #f3f5f1;
+  --color-ink-100: #e5e9e3;
+  --color-ink-200: #d0d7ce;
+  --color-ink-300: #b1bcaf;
+  --color-ink-400: #8b988a;
+  --color-ink-500: #677466;
+  --color-ink-600: #4f5b4f;
+  --color-ink-700: #3c463d;
+  --color-ink-800: #283029;
+  --color-ink-900: #1a201b;
+  --color-ink-950: #101511;
+
+  --color-brand-50: #edf6f0;
+  --color-brand-100: #d4eadc;
+  --color-brand-200: #acd5bb;
+  --color-brand-300: #7cb993;
+  --color-brand-400: #4d996f;
+  --color-brand-500: #2e7c54;
+  --color-brand-600: #226544;
+  --color-brand-700: #1b5137;
+  --color-brand-800: #17412d;
+  --color-brand-900: #123424;
+  --color-brand-950: #0a1e15;
+
+  --color-highlight: #f5d547;
+  --color-pen: #c23a2b;
+  --color-paper: #f6f7f3;
+  --color-rule: #a9c3e0;
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-literata), Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  --background: var(--color-paper);
+  --foreground: var(--color-ink-900);
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--color-ink-950);
+    --foreground: var(--color-ink-100);
+    /* Secondary text needs more lift on the dark background to stay readable. */
+    --color-ink-500: #95a194;
+    --color-ink-400: #7f8b7e;
+    color-scheme: dark;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: var(--text-3xl);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  table thead {
+    font-size: var(--text-xs);
+    letter-spacing: 0.02em;
+  }
+
+  kbd {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer components {
+  /* A ruled index card: red header rule, then blue lines. Used by the study session and the landing demo. */
+  .index-card {
+    --card-head: 4.5rem;
+    --rule-mix: 45%;
+    --pen-mix: 55%;
+    background-color: #fff;
+    background-image:
+      linear-gradient(to bottom, transparent calc(var(--card-head) - 1px), color-mix(in srgb, var(--color-pen) var(--pen-mix), transparent) calc(var(--card-head) - 1px), color-mix(in srgb, var(--color-pen) var(--pen-mix), transparent) var(--card-head), transparent var(--card-head)),
+      repeating-linear-gradient(to bottom, transparent 0, transparent calc(1.75rem - 1px), color-mix(in srgb, var(--color-rule) var(--rule-mix), transparent) calc(1.75rem - 1px), color-mix(in srgb, var(--color-rule) var(--rule-mix), transparent) 1.75rem);
+    background-position: 0 0, 0 var(--card-head);
+    background-repeat: no-repeat, repeat;
+    box-shadow:
+      0 1px 0 var(--color-ink-200),
+      0 12px 24px -12px color-mix(in srgb, var(--color-brand-950) 25%, transparent);
+    border-radius: 3px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .index-card {
+      --rule-mix: 14%;
+      --pen-mix: 75%;
+      background-color: var(--color-ink-900);
+      box-shadow: 0 0 0 1px var(--color-ink-800);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

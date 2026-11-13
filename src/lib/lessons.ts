@@ -17,6 +17,8 @@ export type Lesson = {
   topic: string;
   notes: string | null;
   status: LessonStatus;
+  /** Set when the lesson was created by a recurring series. */
+  seriesId: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -68,4 +70,48 @@ export function updateLesson(id: number, data: LessonInput): Promise<Lesson> {
 
 export function cancelLesson(id: number): Promise<Lesson> {
   return apiFetch(`/api/lessons/${id}/cancel`, { method: "POST" });
+}
+
+export type Weekday = "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+
+/** Weekly lessons on some weekdays at a school-local time, with no end date. */
+export type LessonSeries = {
+  id: number;
+  teacherId: number;
+  teacherName: string;
+  studentId: number;
+  studentName: string;
+  weekdays: Weekday[];
+  /** "14:00:00", school time */
+  startTime: string;
+  durationMinutes: number;
+  topic: string;
+  notes: string | null;
+  /** yyyy-MM-dd */
+  startsOn: string;
+  endedAt: string | null;
+  nextLessonAt: string | null;
+};
+
+/** Active series: teachers their own, students theirs, admins all. */
+export function listSeries(): Promise<LessonSeries[]> {
+  return apiFetch("/api/lesson-series");
+}
+
+/** Creates the series and its lessons for the next 8 weeks (409 if any of them clashes). */
+export function createSeries(data: {
+  studentId: number | null;
+  weekdays: string[];
+  startsOn: string;
+  startTime: string;
+  durationMinutes: number;
+  topic: string;
+  notes: string | null;
+}): Promise<{ series: LessonSeries; lessonsCreated: number }> {
+  return apiFetch("/api/lesson-series", { method: "POST", body: JSON.stringify(data) });
+}
+
+/** Cancels the series' lessons from `from` (yyyy-MM-dd, school date; default today) and stops it. */
+export function endSeries(id: number, from?: string): Promise<{ series: LessonSeries; lessonsCanceled: number }> {
+  return apiFetch(`/api/lesson-series/${id}/end`, { method: "POST", body: JSON.stringify(from ? { from } : {}) });
 }
