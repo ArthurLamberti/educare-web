@@ -1,19 +1,36 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { DeleteStudentButton } from "@/components/delete-student-button";
+import { StudentFilters } from "@/components/student-filters";
+import { StudentStatusButton } from "@/components/student-status-button";
 import { requireUser } from "@/lib/auth";
 import { listStudents } from "@/lib/students";
+import { listTeachers } from "@/lib/teachers";
 
 export const metadata: Metadata = { title: "Students" };
 
 const PAGE_SIZE = 20;
 
 export default async function StudentsPage({ searchParams }: PageProps<"/students">) {
-  await requireUser(["ADMIN", "TEACHER"]);
-  const { page } = await searchParams;
+  const user = await requireUser(["ADMIN", "TEACHER"]);
+  const isAdmin = user.role === "ADMIN";
+  const { page, created, teacherId, inactive } = await searchParams;
   const pageNumber = Math.max(0, Number(page) || 0);
-  const students = await listStudents(pageNumber, PAGE_SIZE);
+  const filters = {
+    teacherId: isAdmin && Number(teacherId) > 0 ? Number(teacherId) : undefined,
+    includeInactive: inactive === "1",
+  };
+  const [students, teachers] = await Promise.all([
+    listStudents(pageNumber, PAGE_SIZE, filters),
+    isAdmin ? listTeachers(0, 200) : null,
+  ]);
+
+  const pageLink = (n: number) => {
+    const params = new URLSearchParams({ page: String(n) });
+    if (filters.teacherId) params.set("teacherId", String(filters.teacherId));
+    if (filters.includeInactive) params.set("inactive", "1");
+    return `/students?${params}`;
+  };
 
   return (
     <section className="flex flex-col gap-6">
@@ -23,6 +40,14 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
           New student
         </Link>
       </div>
+
+      {created && (
+        <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800 dark:bg-green-950 dark:text-green-300">
+          Student created. Share the initial password with them.
+        </p>
+      )}
+
+      <StudentFilters teachers={teachers?.content.map((t) => ({ id: t.id, name: t.name }))} />
 
       {students.content.length === 0 ? (
         <p className="text-zinc-500">No students registered.</p>
@@ -34,21 +59,28 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Email</th>
                 <th className="px-4 py-3 font-medium">Birth date</th>
+                {isAdmin && <th className="px-4 py-3 font-medium">Teacher</th>}
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {students.content.map((student) => (
-                <tr key={student.id}>
-                  <td className="px-4 py-3">{student.name}</td>
+                <tr key={student.id} className={student.active ? "" : "text-zinc-400"}>
+                  <td className="px-4 py-3">
+                    {student.name}
+                    {!student.active && <span className="ml-2 text-xs">(inactive)</span>}
+                  </td>
                   <td className="px-4 py-3">{student.email}</td>
                   <td className="px-4 py-3">{formatDate(student.birthDate)}</td>
+                  {isAdmin && <td className="px-4 py-3">{student.teacherName}</td>}
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-4">
-                      <Link href={`/students/${student.id}/edit`} className="text-sm font-medium text-indigo-600 hover:underline">
-                        Edit
-                      </Link>
-                      <DeleteStudentButton id={student.id} name={student.name} />
+                      {student.active && (
+                        <Link href={`/students/${student.id}/edit`} className="text-sm font-medium text-indigo-600 hover:underline">
+                          Edit
+                        </Link>
+                      )}
+                      <StudentStatusButton id={student.id} name={student.name} active={student.active} />
                     </div>
                   </td>
                 </tr>
@@ -64,8 +96,8 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
             Page {students.number + 1} of {students.totalPages} · {students.totalElements} students
           </span>
           <div className="flex gap-2">
-            {students.number > 0 && <Link href={`/students?page=${students.number - 1}`} className="hover:underline">← Previous</Link>}
-            {students.number + 1 < students.totalPages && <Link href={`/students?page=${students.number + 1}`} className="hover:underline">Next →</Link>}
+            {students.number > 0 && <Link href={pageLink(students.number - 1)} className="hover:underline">← Previous</Link>}
+            {students.number + 1 < students.totalPages && <Link href={pageLink(students.number + 1)} className="hover:underline">Next →</Link>}
           </div>
         </div>
       )}
