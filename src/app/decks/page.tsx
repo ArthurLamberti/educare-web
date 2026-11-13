@@ -4,6 +4,7 @@ import Link from "next/link";
 import { requireUser, type User } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
 import { listDecks } from "@/lib/decks";
+import { getStudentProgress, toReviewToday } from "@/lib/reviews";
 
 export const metadata: Metadata = { title: "Flashcards" };
 
@@ -15,7 +16,13 @@ export default async function DecksPage({ searchParams }: PageProps<"/decks">) {
   const { archived, page } = await searchParams;
   const includeArchived = archived === "1";
   const pageNumber = Math.max(0, Number(page) || 0);
-  const decks = await listDecks({ includeArchived, page: pageNumber, size: PAGE_SIZE });
+  const isStudent = user.role === "STUDENT";
+  const [decks, progress] = await Promise.all([
+    listDecks({ includeArchived, page: pageNumber, size: PAGE_SIZE }),
+    isStudent ? getStudentProgress() : [],
+  ]);
+  const today = new Map(progress.map((p) => [p.deckId, toReviewToday(p)]));
+  const totalToday = progress.reduce((sum, p) => sum + toReviewToday(p), 0);
 
   const link = (changes: { archived?: boolean; page?: number }) => {
     const params = new URLSearchParams();
@@ -29,6 +36,11 @@ export default async function DecksPage({ searchParams }: PageProps<"/decks">) {
     <section className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{user.role === "STUDENT" ? "My flashcards" : "Flashcards"}</h1>
+        {isStudent && totalToday > 0 && (
+          <Link href="/study" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+            Study all ({totalToday})
+          </Link>
+        )}
         {user.role === "TEACHER" && (
           <Link href="/decks/new" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">
             New deck
@@ -37,7 +49,7 @@ export default async function DecksPage({ searchParams }: PageProps<"/decks">) {
       </div>
 
       {user.role === "STUDENT" ? (
-        <StudentDecks decks={decks.content} />
+        <StudentDecks decks={decks.content} today={today} />
       ) : (
         <>
           <Link href={link({ archived: !includeArchived })} className="flex items-center gap-2 text-sm" role="checkbox" aria-checked={includeArchived}>
@@ -110,19 +122,26 @@ function TeacherDecks({ decks, user, includeArchived }: { decks: Decks; user: Us
   );
 }
 
-function StudentDecks({ decks }: { decks: Decks }) {
+function StudentDecks({ decks, today }: { decks: Decks; today: Map<number, number> }) {
   if (decks.length === 0) return <p className="text-zinc-500">Your teacher has not proposed any flashcards yet.</p>;
   return (
     <ul className="grid gap-3 sm:grid-cols-2">
       {decks.map((d) => (
-        <li key={d.id}>
-          <Link href={`/decks/${d.id}`} className="flex h-full flex-col gap-1 rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900">
-            <span className="font-semibold">{d.title}</span>
-            {d.description && <span className="text-sm text-zinc-600 dark:text-zinc-400">{d.description}</span>}
-            <span className="mt-auto pt-2 text-xs text-zinc-500">
-              {d.cardCount} {d.cardCount === 1 ? "card" : "cards"} · {d.teacherName}
-            </span>
+        <li key={d.id} className="flex h-full flex-col gap-1 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+          <Link href={`/decks/${d.id}`} className="font-semibold hover:text-indigo-600 hover:underline">
+            {d.title}
           </Link>
+          {d.description && <span className="text-sm text-zinc-600 dark:text-zinc-400">{d.description}</span>}
+          <span className="mt-auto flex items-center gap-3 pt-2 text-xs text-zinc-500">
+            {d.cardCount} {d.cardCount === 1 ? "card" : "cards"} · {d.teacherName}
+            {(today.get(d.id) ?? 0) > 0 ? (
+              <Link href={`/study?deck=${d.id}`} className="ml-auto rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500">
+                Study · {today.get(d.id)} today
+              </Link>
+            ) : (
+              <span className="ml-auto text-green-700 dark:text-green-400">Done for today</span>
+            )}
+          </span>
         </li>
       ))}
     </ul>

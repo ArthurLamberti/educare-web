@@ -8,6 +8,7 @@ import { DeckStudents } from "@/components/deck-students";
 import { ApiError } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { getDeck, listCards, listDeckStudents } from "@/lib/decks";
+import { getDeckProgress } from "@/lib/reviews";
 import { listStudents } from "@/lib/students";
 
 export const metadata: Metadata = { title: "Deck" };
@@ -25,7 +26,9 @@ export default async function DeckPage({ params, searchParams }: PageProps<"/dec
 
   const [deck, cards] = await Promise.all([getDeck(id).catch(notFoundOn404), listCards(id).catch(notFoundOn404)]);
   const isOwner = user.role === "TEACHER" && deck.teacherId === user.id;
-  const [deckStudents, ownStudents] = isOwner ? await Promise.all([listDeckStudents(id), listStudents(0, 200)]) : [[], null];
+  const [deckStudents, ownStudents, progress] = isOwner
+    ? await Promise.all([listDeckStudents(id), listStudents(0, 200), getDeckProgress(id)])
+    : [[], null, []];
   const assigned = new Set(deckStudents.map((s) => s.studentId));
 
   return (
@@ -74,6 +77,35 @@ export default async function DeckPage({ params, searchParams }: PageProps<"/dec
               archived={deck.archived}
             />
           </div>
+          {progress.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <h2 className="text-lg font-semibold">Progress</h2>
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-800">
+                  <tr>
+                    <th className="py-2 font-medium">Student</th>
+                    <th className="py-2 text-right font-medium">New</th>
+                    <th className="py-2 text-right font-medium" title="Interval under 21 days">Learning</th>
+                    <th className="py-2 text-right font-medium" title="Interval of 21 days or more">Mature</th>
+                    <th className="py-2 text-right font-medium">Due today</th>
+                    <th className="py-2 text-right font-medium">Reviews (7 days)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {progress.map((p) => (
+                    <tr key={p.studentId} className="border-b border-zinc-100 dark:border-zinc-900">
+                      <td className="py-2">{p.name}</td>
+                      <td className="py-2 text-right">{p.newCards}</td>
+                      <td className="py-2 text-right">{p.learning}</td>
+                      <td className="py-2 text-right">{p.mature}</td>
+                      <td className="py-2 text-right">{p.dueToday}</td>
+                      <td className="py-2 text-right">{p.reviewsLast7Days}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       ) : cards.length === 0 ? (
         <p className="text-zinc-500">This deck has no cards yet.</p>

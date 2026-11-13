@@ -66,6 +66,9 @@ src/
 ├── lib/decks.ts              # /api/decks and /api/cards API functions
 ├── app/decks/...             # teachers: deck list, new, [id] (card editor + students), [id]/edit; students: their decks, read-only cards
 ├── components/card-editor.tsx # add, inline edit, delete, up/down reorder (useOptimistic)
+├── lib/reviews.ts            # /api/reviews (queue, rate, progress) and /api/decks/{id}/progress
+├── app/study/...             # student study session (all decks or ?deck=), rating Server Action
+├── components/study-session.tsx # reveal (Space), rate (1-4), Again re-queue, refetch when empty, summary
 ├── app/teachers/...          # admin pages: list, new, [id]/edit
 ├── app/login, change-password, not-allowed, session/expired
 └── components/               # form and delete button (client components)

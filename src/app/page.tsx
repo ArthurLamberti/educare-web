@@ -5,6 +5,7 @@ import { LessonList } from "@/components/lesson-list";
 import { requireUser, type Role, type User } from "@/lib/auth";
 import { ROOT_DOMAIN } from "@/lib/host";
 import { listLessons } from "@/lib/lessons";
+import { getStudentProgress, toReviewToday } from "@/lib/reviews";
 import { getTenantSlug } from "@/lib/tenant";
 
 const LINKS: Record<Role, { href: string; label: string }[]> = {
@@ -43,8 +44,23 @@ async function HomeContent() {
           </Link>
         ))}
       </div>
+      {user.role === "STUDENT" && <ReviewReminder />}
       {user.role !== "ADMIN" && <NextLessons user={user} />}
     </section>
+  );
+}
+
+/** "N cards to review today" for students with flashcards. */
+async function ReviewReminder() {
+  const progress = await getStudentProgress();
+  if (progress.length === 0) return null;
+  const count = progress.reduce((sum, p) => sum + toReviewToday(p), 0);
+  return count > 0 ? (
+    <Link href="/study" className="flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-800 hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950 dark:text-indigo-300">
+      {count} {count === 1 ? "card" : "cards"} to review today →
+    </Link>
+  ) : (
+    <p className="text-sm text-green-700 dark:text-green-400">Flashcards: all done for today.</p>
   );
 }
 
