@@ -5,6 +5,7 @@ import { LessonFilters } from "@/components/lesson-filters";
 import { LessonList } from "@/components/lesson-list";
 import { requireUser } from "@/lib/auth";
 import { listLessons, type LessonQuery } from "@/lib/lessons";
+import { lessonsWithPendingRequest } from "@/lib/reschedule-requests";
 import { listStudents } from "@/lib/students";
 import { listTeachers } from "@/lib/teachers";
 
@@ -39,10 +40,11 @@ export default async function LessonsPage({ searchParams }: PageProps<"/lessons"
     canceled: { status: "CANCELED" as const, descending: true },
   }[view];
 
-  const [lessons, teachers, students] = await Promise.all([
+  const [lessons, teachers, students, pendingLessonIds] = await Promise.all([
     listLessons({ ...query, ...filters, page: pageNumber, size: PAGE_SIZE }),
     isAdmin ? listTeachers(0, 200) : null,
     isAdmin ? listStudents(0, 200, { includeInactive: true }) : null,
+    view === "upcoming" ? lessonsWithPendingRequest() : [],
   ]);
 
   const link = (changes: Record<string, string | undefined>) => {
@@ -97,7 +99,14 @@ export default async function LessonsPage({ searchParams }: PageProps<"/lessons"
       {lessons.content.length === 0 ? (
         <p className="text-zinc-500">{VIEWS[view].empty}</p>
       ) : (
-        <LessonList lessons={lessons.content} role={user.role} timeZone={user.tenant.timeZone} actions={isTeacher && view === "upcoming"} />
+        <LessonList
+          lessons={lessons.content}
+          role={user.role}
+          timeZone={user.tenant.timeZone}
+          actions={!isAdmin && view === "upcoming"}
+          pendingLessonIds={pendingLessonIds}
+          now={now.getTime()}
+        />
       )}
 
       {lessons.totalPages > 1 && (

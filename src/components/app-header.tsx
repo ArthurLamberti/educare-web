@@ -2,23 +2,31 @@ import Link from "next/link";
 
 import { logout } from "@/app/session-actions";
 import { getCurrentUser, getSchool, type Role } from "@/lib/auth";
+import { countPendingRequests } from "@/lib/reschedule-requests";
 
 const NAV: Record<Role, { href: string; label: string }[]> = {
   ADMIN: [
     { href: "/teachers", label: "Teachers" },
     { href: "/students", label: "Students" },
     { href: "/lessons", label: "Lessons" },
+    { href: "/requests", label: "Requests" },
   ],
   TEACHER: [
     { href: "/students", label: "Students" },
     { href: "/lessons", label: "Lessons" },
+    { href: "/requests", label: "Requests" },
   ],
-  STUDENT: [{ href: "/lessons", label: "Lessons" }],
+  STUDENT: [
+    { href: "/lessons", label: "Lessons" },
+    { href: "/requests", label: "My requests" },
+  ],
 };
 
 /** Session-dependent part of the header; rendered inside <Suspense> so the shell stays static. */
 export async function AppHeader() {
   const [school, user] = await Promise.all([getSchool(), getCurrentUser()]);
+  // Teachers see how many requests wait for their decision.
+  const pending = user?.role === "TEACHER" && !user.mustChangePassword ? await countPendingRequests() : 0;
 
   return (
     <nav className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-4">
@@ -29,8 +37,13 @@ export async function AppHeader() {
       {user &&
         !user.mustChangePassword &&
         NAV[user.role].map((item) => (
-          <Link key={item.href} href={item.href} className="text-sm font-medium hover:text-indigo-600">
+          <Link key={item.href} href={item.href} className="flex items-center gap-1.5 text-sm font-medium hover:text-indigo-600">
             {item.label}
+            {item.href === "/requests" && pending > 0 && (
+              <span aria-label={`${pending} pending`} className="rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white">
+                {pending}
+              </span>
+            )}
           </Link>
         ))}
       {user && (

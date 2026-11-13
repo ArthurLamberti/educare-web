@@ -53,7 +53,9 @@ src/
 ├── app/students/...          # pages: list, new, [id]/edit
 ├── lib/datetime.ts           # school time zone <-> UTC instants (Intl, DST-safe)
 ├── lib/lessons.ts            # /api/lessons API functions
-├── app/lessons/...           # tabs Upcoming/Past/Canceled, new, [id]/edit; cancel action
+├── app/lessons/...           # tabs Upcoming/Past/Canceled, new, [id]/edit, [id]/request-change; cancel action
+├── lib/reschedule-requests.ts # /api/reschedule-requests API functions, 48h deadline helpers
+├── app/requests/...          # students: their requests + withdraw; teachers: inbox with approve/reject
 ├── app/teachers/...          # admin pages: list, new, [id]/edit
 ├── app/login, change-password, not-allowed, session/expired
 └── components/               # form and delete button (client components)
