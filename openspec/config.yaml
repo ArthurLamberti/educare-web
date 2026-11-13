@@ -1,0 +1,47 @@
+schema: spec-driven
+
+context: |
+  Educare is a multi-tenant tutoring platform. A tenant is a school, reached by subdomain
+  (<school>.educare.com; <school>.localhost:3000 in development). Each school has admins,
+  teachers and students. Lessons are 1 teacher + 1 student.
+  This repo is the web app (educare-web). The REST API lives in a separate repo
+  (educare-api, Spring Boot); each numbered change here depends on the educare-api change
+  with the same number and name.
+  Tech stack: Next.js 16 App Router with cacheComponents and partialPrefetching, React 19,
+  TypeScript, Tailwind 4. This Next.js version differs from older ones: read
+  node_modules/next/dist/docs/ before writing code (e.g. middleware is now proxy.ts).
+  Architecture: the browser never calls the API. Reads happen in Server Components,
+  writes in Server Actions, through src/lib/api.ts (apiFetch, ApiError with ProblemDetail).
+  One src/lib/<resource>.ts per API resource, pages under src/app/<resource>/.
+  Conventions: everything in English (code and UI text).
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
