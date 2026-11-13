@@ -94,7 +94,15 @@ export default async function TaskPage({ params, searchParams }: PageProps<"/tas
                   <td className="py-2">{a.studentName}</td>
                   <td className="py-2">{a.dueAt ? formatDateTime(a.dueAt, zone) : <span className="text-zinc-500">No due date</span>}</td>
                   <td className="py-2"><AssignmentStatusBadge assignment={a} /></td>
-                  <td className="py-2 text-right">{a.status === "ASSIGNED" && <UnassignButton id={a.id} studentName={a.studentName} />}</td>
+                  <td className="py-2 text-right">
+                    {a.status === "ASSIGNED" ? (
+                      <UnassignButton id={a.id} studentName={a.studentName} />
+                    ) : (
+                      <Link href={`/grading/${a.id}`} className="text-sm font-medium text-indigo-600 hover:underline">
+                        {a.status === "GRADED" ? "Revise grade" : "Grade"}
+                      </Link>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

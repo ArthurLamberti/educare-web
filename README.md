@@ -58,8 +58,11 @@ src/
 ├── app/requests/...          # students: their requests + withdraw; teachers: inbox with approve/reject
 ├── lib/tasks.ts, lib/assignments.ts # /api/tasks and /api/assignments API functions
 ├── app/tasks/...             # teacher task library: list (search, archived), new, [id] (assign, unassign), [id]/edit
-├── app/assignments/...       # students: to-do + completed; teachers/admins: overview with filters; [id] detail
+├── app/assignments/...       # students: to-do + completed; teachers/admins: overview with filters;
+│                             # [id]: student answers (until graded) and reads the grade; submit/grade actions
+├── app/grading/...           # teacher queue (oldest submission first) and [id] grading page (score + feedback)
 ├── components/markdown.tsx   # safe Markdown (react-markdown, raw HTML shown as text, no images)
+├── components/markdown-editor.tsx # Write/Preview editor, optional unsaved-changes warning
 ├── app/teachers/...          # admin pages: list, new, [id]/edit
 ├── app/login, change-password, not-allowed, session/expired
 └── components/               # form and delete button (client components)

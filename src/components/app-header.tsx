@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { logout } from "@/app/session-actions";
 import { getCurrentUser, getSchool, type Role } from "@/lib/auth";
+import { countToGrade } from "@/lib/assignments";
 import { countPendingRequests } from "@/lib/reschedule-requests";
 
 const NAV: Record<Role, { href: string; label: string }[]> = {
@@ -18,6 +19,7 @@ const NAV: Record<Role, { href: string; label: string }[]> = {
     { href: "/requests", label: "Requests" },
     { href: "/tasks", label: "Tasks" },
     { href: "/assignments", label: "Assignments" },
+    { href: "/grading", label: "To grade" },
   ],
   STUDENT: [
     { href: "/lessons", label: "Lessons" },
@@ -29,8 +31,10 @@ const NAV: Record<Role, { href: string; label: string }[]> = {
 /** Session-dependent part of the header; rendered inside <Suspense> so the shell stays static. */
 export async function AppHeader() {
   const [school, user] = await Promise.all([getSchool(), getCurrentUser()]);
-  // Teachers see how many requests wait for their decision.
-  const pending = user?.role === "TEACHER" && !user.mustChangePassword ? await countPendingRequests() : 0;
+  // Teachers see how many requests wait for their decision and how much work waits for a grade.
+  const isTeacher = user?.role === "TEACHER" && !user.mustChangePassword;
+  const [pending, toGrade] = isTeacher ? await Promise.all([countPendingRequests(), countToGrade()]) : [0, 0];
+  const counters: Record<string, number> = { "/requests": pending, "/grading": toGrade };
 
   return (
     <nav className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-4">
@@ -43,9 +47,9 @@ export async function AppHeader() {
         NAV[user.role].map((item) => (
           <Link key={item.href} href={item.href} className="flex items-center gap-1.5 text-sm font-medium hover:text-indigo-600">
             {item.label}
-            {item.href === "/requests" && pending > 0 && (
-              <span aria-label={`${pending} pending`} className="rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white">
-                {pending}
+            {(counters[item.href] ?? 0) > 0 && (
+              <span aria-label={`${counters[item.href]} pending`} className="rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white">
+                {counters[item.href]}
               </span>
             )}
           </Link>
