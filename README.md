@@ -63,6 +63,9 @@ src/
 ├── app/grading/...           # teacher queue (oldest submission first) and [id] grading page (score + feedback)
 ├── components/markdown.tsx   # safe Markdown (react-markdown, raw HTML shown as text, no images)
 ├── components/markdown-editor.tsx # Write/Preview editor, optional unsaved-changes warning
+├── lib/decks.ts              # /api/decks and /api/cards API functions
+├── app/decks/...             # teachers: deck list, new, [id] (card editor + students), [id]/edit; students: their decks, read-only cards
+├── components/card-editor.tsx # add, inline edit, delete, up/down reorder (useOptimistic)
 ├── app/teachers/...          # admin pages: list, new, [id]/edit
 ├── app/login, change-password, not-allowed, session/expired
 └── components/               # form and delete button (client components)

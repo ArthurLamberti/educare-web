@@ -12,6 +12,7 @@ const NAV: Record<Role, { href: string; label: string }[]> = {
     { href: "/lessons", label: "Lessons" },
     { href: "/requests", label: "Requests" },
     { href: "/assignments", label: "Assignments" },
+    { href: "/decks", label: "Flashcards" },
   ],
   TEACHER: [
     { href: "/students", label: "Students" },
@@ -20,10 +21,12 @@ const NAV: Record<Role, { href: string; label: string }[]> = {
     { href: "/tasks", label: "Tasks" },
     { href: "/assignments", label: "Assignments" },
     { href: "/grading", label: "To grade" },
+    { href: "/decks", label: "Flashcards" },
   ],
   STUDENT: [
     { href: "/lessons", label: "Lessons" },
     { href: "/assignments", label: "Assignments" },
+    { href: "/decks", label: "Flashcards" },
     { href: "/requests", label: "My requests" },
   ],
 };
