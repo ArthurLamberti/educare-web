@@ -97,7 +97,8 @@ src/
 ├── app/students/...          # pages: list, new, [id]/edit
 ├── lib/datetime.ts           # school time zone <-> UTC instants (Intl, DST-safe)
 ├── lib/lessons.ts            # /api/lessons and /api/lesson-series API functions
-├── app/lessons/...           # tabs Upcoming/Past/Canceled + active weekly series, new (optional "Repetir toda semana"),
+├── app/lessons/...           # tabs Upcoming/Past/Canceled + active weekly series, new (optional "Repetir toda semana",
+│                             # "Aula online" + room link), [id] (details, "Entrar na sala", teacher's notes),
 │                             # [id]/edit, [id]/request-change; cancel and end-series actions
 ├── lib/reschedule-requests.ts # /api/reschedule-requests API functions, 48h deadline helpers
 ├── app/requests/...          # students: their requests + withdraw; teachers: inbox with approve/reject

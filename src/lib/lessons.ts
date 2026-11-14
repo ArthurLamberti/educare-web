@@ -16,6 +16,11 @@ export type Lesson = {
   durationMinutes: number;
   topic: string;
   notes: string | null;
+  /** Room link; set for online lessons. */
+  meetingUrl: string | null;
+  /** The teacher's notes about the lesson (plain text), visible to the student. */
+  annotations: string | null;
+  annotationsUpdatedAt: string | null;
   status: LessonStatus;
   /** Set when the lesson was created by a recurring series. */
   seriesId: number | null;
@@ -29,6 +34,7 @@ export type LessonInput = {
   durationMinutes: number;
   topic: string;
   notes: string | null;
+  meetingUrl: string | null;
 };
 
 export type LessonQuery = {
@@ -68,6 +74,11 @@ export function updateLesson(id: number, data: LessonInput): Promise<Lesson> {
   return apiFetch(`/api/lessons/${id}`, { method: "PUT", body: JSON.stringify(data) });
 }
 
+/** Only the lesson's teacher; empty text clears the notes. */
+export function annotateLesson(id: number, text: string): Promise<Lesson> {
+  return apiFetch(`/api/lessons/${id}/annotations`, { method: "PUT", body: JSON.stringify({ text }) });
+}
+
 export function cancelLesson(id: number): Promise<Lesson> {
   return apiFetch(`/api/lessons/${id}/cancel`, { method: "POST" });
 }
@@ -87,6 +98,7 @@ export type LessonSeries = {
   durationMinutes: number;
   topic: string;
   notes: string | null;
+  meetingUrl: string | null;
   /** yyyy-MM-dd */
   startsOn: string;
   endedAt: string | null;
@@ -107,6 +119,7 @@ export function createSeries(data: {
   durationMinutes: number;
   topic: string;
   notes: string | null;
+  meetingUrl: string | null;
 }): Promise<{ series: LessonSeries; lessonsCreated: number }> {
   return apiFetch("/api/lesson-series", { method: "POST", body: JSON.stringify(data) });
 }

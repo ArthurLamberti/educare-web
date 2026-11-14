@@ -28,6 +28,7 @@ export type LessonFormValues = {
   durationMinutes: number;
   topic: string;
   notes: string | null;
+  meetingUrl: string | null;
 };
 
 function durationLabel(minutes: number) {
@@ -50,6 +51,8 @@ export function LessonForm({ lesson, students, timeZone }: { lesson?: LessonForm
     notes: state.values?.notes ?? lesson?.notes ?? "",
   };
   const [repeat, setRepeat] = useState(state.values?.repeat ?? false);
+  const [online, setOnline] = useState(state.values?.online ?? Boolean(lesson?.meetingUrl));
+  const meetingUrl = state.values?.meetingUrl ?? lesson?.meetingUrl ?? "";
   const [date, setDate] = useState(values.date);
   const [picked, setPicked] = useState<string[] | null>(state.values?.weekdays ?? null);
   // Until the teacher picks weekdays, follow the start date's weekday.
@@ -138,6 +141,28 @@ export function LessonForm({ lesson, students, timeZone }: { lesson?: LessonForm
           )}
         </fieldset>
       )}
+
+      <fieldset className="flex flex-col gap-2 rounded-md border border-ink-200 px-4 py-3 dark:border-ink-800">
+        <label className="flex items-center gap-2 text-sm font-bold">
+          <input type="checkbox" name="online" value="1" checked={online} onChange={(e) => setOnline(e.target.checked)} className="size-4 accent-brand-600" />
+          Aula online
+        </label>
+        {online && (
+          <Field label="Link da sala" error={state.errors?.meetingUrl}>
+            <input
+              name="meetingUrl"
+              type="url"
+              required
+              maxLength={500}
+              placeholder="https://meet.google.com/..."
+              defaultValue={meetingUrl}
+              key={`m-${k}`}
+              className={inputClass}
+            />
+          </Field>
+        )}
+        {online && <span className="text-xs text-ink-500">O aluno vê o botão “Entrar na sala” na lista de aulas.{!lesson && repeat && " Vale para todas as aulas da série."}</span>}
+      </fieldset>
 
       <Field label="Duração" error={state.errors?.durationMinutes}>
         <select name="durationMinutes" required defaultValue={values.durationMinutes} key={`du-${k}`} className={inputClass}>

@@ -6,15 +6,26 @@ import { redirect } from "next/navigation";
 import { ApiError } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { zonedDateTimeToInstant } from "@/lib/datetime";
-import { cancelLesson, createLesson, createSeries, endSeries, updateLesson } from "@/lib/lessons";
+import { annotateLesson, cancelLesson, createLesson, createSeries, endSeries, updateLesson } from "@/lib/lessons";
 
-type Field = "studentId" | "startsAt" | "durationMinutes" | "topic" | "notes" | "weekdays";
+type Field = "studentId" | "startsAt" | "durationMinutes" | "topic" | "notes" | "weekdays" | "meetingUrl";
 
 export type LessonFormState = {
   message?: string;
   errors?: Partial<Record<Field, string>>;
   /** Typed values to keep after an error. */
-  values?: { studentId: string; date: string; time: string; durationMinutes: string; topic: string; notes: string; repeat: boolean; weekdays: string[] };
+  values?: {
+    studentId: string;
+    date: string;
+    time: string;
+    durationMinutes: string;
+    topic: string;
+    notes: string;
+    repeat: boolean;
+    weekdays: string[];
+    online: boolean;
+    meetingUrl: string;
+  };
 };
 
 /**
@@ -33,7 +44,12 @@ export async function saveLesson(id: number | null, _prev: LessonFormState, form
     notes: text("notes"),
     repeat: id === null && formData.get("repeat") === "1",
     weekdays: formData.getAll("weekdays").map(String),
+    online: formData.get("online") === "1",
+    meetingUrl: text("meetingUrl"),
   };
+  const meetingUrlError = checkMeetingUrl(values.online, values.meetingUrl);
+  if (meetingUrlError) return { values, errors: { meetingUrl: meetingUrlError } };
+  const meetingUrl = values.online ? values.meetingUrl : null;
 
   const startsAt = zonedDateTimeToInstant(values.date, values.time, user.tenant.timeZone);
   if (!startsAt) {
@@ -45,9 +61,10 @@ export async function saveLesson(id: number | null, _prev: LessonFormState, form
     durationMinutes: Number(values.durationMinutes),
     topic: values.topic,
     notes: values.notes || null,
+    meetingUrl,
   };
 
-  if (values.repeat) return saveSeries(values);
+  if (values.repeat) return saveSeries(values, meetingUrl);
 
   try {
     if (id === null) {
@@ -62,8 +79,17 @@ export async function saveLesson(id: number | null, _prev: LessonFormState, form
   redirect(id === null ? "/lessons?created=1" : "/lessons");
 }
 
+/** Online lessons need the room link, and only http(s) links are accepted (no `javascript:`). */
+function checkMeetingUrl(online: boolean, url: string): string | undefined {
+  if (!online) return undefined;
+  if (!url) return "Informe o link da sala";
+  if (!/^https?:\/\/\S+$/i.test(url)) return "Use um link completo, começando com https://";
+  if (url.length > 500) return "Link muito longo";
+  return undefined;
+}
+
 /** A new recurring series: the first lesson's date and time, repeated every week on the chosen weekdays. */
-async function saveSeries(values: NonNullable<LessonFormState["values"]>): Promise<LessonFormState> {
+async function saveSeries(values: NonNullable<LessonFormState["values"]>, meetingUrl: string | null): Promise<LessonFormState> {
   if (values.weekdays.length === 0) return { values, errors: { weekdays: "Escolha pelo menos um dia da semana" } };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(values.date) || !/^\d{2}:\d{2}$/.test(values.time)) {
     return { values, errors: { startsAt: "Informe a data de início e o horário" } };
@@ -80,6 +106,7 @@ async function saveSeries(values: NonNullable<LessonFormState["values"]>): Promi
         durationMinutes: Number(values.durationMinutes),
         topic: values.topic,
         notes: values.notes || null,
+        meetingUrl,
       })
     ).lessonsCreated;
   } catch (error) {
@@ -110,4 +137,19 @@ export async function cancelLessonAction(id: number) {
   await requireUser(["TEACHER"]);
   await cancelLesson(id);
   refresh();
+}
+
+export type AnnotationsState = { message?: string; savedAt?: string; text?: string };
+
+/** The teacher's notes about a lesson (the API checks it is theirs). */
+export async function saveAnnotations(id: number, _prev: AnnotationsState, formData: FormData): Promise<AnnotationsState> {
+  await requireUser(["TEACHER"]);
+  const text = String(formData.get("annotations") ?? "");
+  try {
+    const lesson = await annotateLesson(id, text);
+    return { savedAt: lesson.annotationsUpdatedAt ?? undefined, text: lesson.annotations ?? "" };
+  } catch (error) {
+    if (error instanceof ApiError) return { message: error.message, text };
+    return { message: error instanceof Error ? error.message : "Erro inesperado", text };
+  }
 }

@@ -41,7 +41,21 @@ export function LessonList({ lessons, role, timeZone, actions = false, pendingLe
                   {formatTime(lesson.startsAt, timeZone)}–{formatTime(lesson.endsAt, timeZone)}
                 </span>
                 <span className="min-w-40 flex-1 font-bold">
-                  {lesson.topic}
+                  <Link href={`/lessons/${lesson.id}`} className="hover:underline">
+                    {lesson.topic}
+                  </Link>
+                  {lesson.meetingUrl && (
+                    <span className="ml-2 rounded-full bg-ink-100 px-2 py-0.5 text-xs font-bold text-ink-700 dark:bg-ink-800 dark:text-ink-300">Online</span>
+                  )}
+                  {lesson.annotations && (
+                    <Link
+                      href={`/lessons/${lesson.id}`}
+                      title="O professor fez anotações sobre esta aula"
+                      className="ml-2 text-xs font-bold text-brand-600 hover:underline"
+                    >
+                      Anotações
+                    </Link>
+                  )}
                   {lesson.seriesId !== null && (
                     <span title="Aula de uma série semanal" className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
                       ↻ Semanal
@@ -55,6 +69,16 @@ export function LessonList({ lessons, role, timeZone, actions = false, pendingLe
                   )}
                 </span>
                 <span className="text-ink-600 dark:text-ink-400">{otherParty(lesson, role)}</span>
+                {lesson.meetingUrl && lesson.status === "SCHEDULED" && role !== "ADMIN" && new Date(lesson.endsAt).getTime() > now && (
+                  <a
+                    href={lesson.meetingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-md bg-brand-600 px-3 py-1 text-xs font-bold text-white hover:bg-brand-500"
+                  >
+                    Entrar na sala
+                  </a>
+                )}
                 {actions && role === "STUDENT" && lesson.status === "SCHEDULED" && !pendingLessonIds.includes(lesson.id) && (
                   <StudentAction lesson={lesson} timeZone={timeZone} now={now} />
                 )}
