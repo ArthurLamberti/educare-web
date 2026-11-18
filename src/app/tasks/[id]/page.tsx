@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AssignForm } from "@/components/assign-form";
 import { AssignmentStatusBadge } from "@/components/assignment-status";
-import { LevelBadge } from "@/components/level-badge";
+import { CategoryBadge, LevelBadge } from "@/components/level-badge";
 import { Markdown } from "@/components/markdown";
 import { TaskActions, UnassignButton } from "@/components/task-actions";
 import { ApiError } from "@/lib/api";
@@ -52,6 +52,11 @@ export default async function TaskPage({ params, searchParams }: PageProps<"/tas
             {task.level && (
               <>
                 <LevelBadge level={task.level} /> {task.level.name} ·
+              </>
+            )}
+            {task.category && (
+              <>
+                <CategoryBadge category={task.category} /> ·
               </>
             )}
             Última atualização: {formatDateTime(task.updatedAt, zone)}

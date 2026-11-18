@@ -51,3 +51,10 @@ The task form SHALL offer an optional "Nível" select with the levels returned b
 #### Scenario: Pick a level
 - **WHEN** a teacher creates a task choosing "B1"
 - **THEN** the task appears in the library with a B1 badge and is found with the B1 filter
+
+### Requirement: Task categories in pages
+A teacher SHALL manage their categories on a page that lists each with the number of tasks using it and allows creating, renaming and deleting them; a duplicate name SHALL show "Já existe uma categoria com esse nome". The task form SHALL offer an optional "Categoria" select with the teacher's categories and a way to create one without leaving the form. Task and assignment lists SHALL show each task's category and offer a "Categoria" filter.
+
+#### Scenario: New category from the task form
+- **WHEN** a teacher creates the category "Listening" from the task form
+- **THEN** it is selected in the form and listed on the categories page

@@ -5,6 +5,7 @@ import { TaskForm } from "@/components/task-form";
 import { ApiError } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { getLevels } from "@/lib/levels";
+import { listTaskCategories } from "@/lib/task-categories";
 import { getTask } from "@/lib/tasks";
 
 export const metadata: Metadata = { title: "Editar tarefa" };
@@ -13,12 +14,13 @@ export default async function EditTaskPage({ params }: PageProps<"/tasks/[id]/ed
   await requireUser(["TEACHER"]);
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
-  const [task, levels] = await Promise.all([
+  const [task, levels, categories] = await Promise.all([
     getTask(id).catch((error) => {
       if (error instanceof ApiError && error.status === 404) notFound();
       throw error;
     }),
     getLevels(),
+    listTaskCategories(),
   ]);
 
   return (
@@ -29,7 +31,11 @@ export default async function EditTaskPage({ params }: PageProps<"/tasks/[id]/ed
           Esta tarefa já foi atribuída. Os alunos que ainda não entregaram vão ver suas alterações.
         </p>
       )}
-      <TaskForm task={{ id: task.id, title: task.title, instructions: task.instructions, level: task.level }} levels={levels} />
+      <TaskForm
+        task={{ id: task.id, title: task.title, instructions: task.instructions, level: task.level, category: task.category }}
+        levels={levels}
+        categories={categories}
+      />
     </section>
   );
 }

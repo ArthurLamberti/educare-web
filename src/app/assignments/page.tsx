@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AssignmentFilters } from "@/components/assignment-filters";
-import { LevelBadge } from "@/components/level-badge";
+import { CategoryBadge, LevelBadge } from "@/components/level-badge";
 import { AssignmentStatusBadge } from "@/components/assignment-status";
 import { getLevels } from "@/lib/levels";
+import { listTaskCategories } from "@/lib/task-categories";
 import { listAssignments, type Assignment, type AssignmentStatus } from "@/lib/assignments";
 import { requireUser, type User } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
@@ -92,12 +93,15 @@ async function AssignmentOverview({ user, params }: { user: User; params: Record
   const studentId = Number(params.studentId) > 0 ? Number(params.studentId) : undefined;
   const status = STATUSES.find((s) => s === params.status);
   const levelId = Number(params.levelId) > 0 ? Number(params.levelId) : undefined;
+  // Categories belong to each teacher: admins see them on rows but do not filter by them.
+  const categoryId = !isAdmin && Number(params.categoryId) > 0 ? Number(params.categoryId) : undefined;
   const pageNumber = Math.max(0, Number(params.page) || 0);
 
-  const [assignments, students, levels] = await Promise.all([
-    listAssignments({ studentId, levelId, statuses: status ? [status] : [], page: pageNumber, size: PAGE_SIZE }),
+  const [assignments, students, levels, categories] = await Promise.all([
+    listAssignments({ studentId, levelId, categoryId, statuses: status ? [status] : [], page: pageNumber, size: PAGE_SIZE }),
     listStudents(0, 200, { includeInactive: true }),
     getLevels(),
+    isAdmin ? undefined : listTaskCategories(),
   ]);
 
   const link = (p: number) => {
@@ -105,6 +109,7 @@ async function AssignmentOverview({ user, params }: { user: User; params: Record
       ...(studentId && { studentId: String(studentId) }),
       ...(status && { status }),
       ...(levelId && { levelId: String(levelId) }),
+      ...(categoryId && { categoryId: String(categoryId) }),
       page: String(p),
     });
     return `/assignments?${q}`;
@@ -121,11 +126,11 @@ async function AssignmentOverview({ user, params }: { user: User; params: Record
         )}
       </div>
 
-      <AssignmentFilters students={students.content.map((s) => ({ id: s.id, name: s.name }))} levels={levels} />
+      <AssignmentFilters students={students.content.map((s) => ({ id: s.id, name: s.name }))} levels={levels} categories={categories} />
       <p className="text-xs text-ink-500">Horários no fuso da escola ({zone.replaceAll("_", " ")}).</p>
 
       {assignments.content.length === 0 ? (
-        <p className="text-ink-500">{studentId || status || levelId ? "Nenhuma atividade com esses filtros." : "Nenhuma atividade ainda."}</p>
+        <p className="text-ink-500">{studentId || status || levelId || categoryId ? "Nenhuma atividade com esses filtros." : "Nenhuma atividade ainda."}</p>
       ) : (
         <table className="w-full text-left text-sm">
           <thead className="border-b border-ink-200 text-ink-500 dark:border-ink-800">
@@ -144,9 +149,10 @@ async function AssignmentOverview({ user, params }: { user: User; params: Record
                   <Link href={`/assignments/${a.id}`} className="font-bold hover:text-brand-600 hover:underline">
                     {a.taskTitle}
                   </Link>
-                  {a.level && (
-                    <span className="ml-2">
+                  {(a.level || a.category) && (
+                    <span className="ml-2 inline-flex gap-1">
                       <LevelBadge level={a.level} />
+                      <CategoryBadge category={a.category} />
                     </span>
                   )}
                 </td>

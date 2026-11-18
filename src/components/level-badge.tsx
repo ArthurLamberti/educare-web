@@ -10,3 +10,13 @@ export function LevelBadge({ level }: { level: { code: string; name: string } | 
     </span>
   );
 }
+
+/** The teacher's own category of a task. */
+export function CategoryBadge({ category }: { category: { name: string } | null }) {
+  if (!category) return null;
+  return (
+    <span className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-semibold text-ink-700 dark:bg-ink-800 dark:text-ink-300">
+      {category.name}
+    </span>
+  );
+}

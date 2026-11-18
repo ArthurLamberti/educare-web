@@ -2,6 +2,7 @@ import "server-only";
 
 import { apiFetch, normalizePage, type Page } from "./api";
 import type { Level } from "./levels";
+import type { TaskCategory } from "./task-categories";
 
 export type AssignmentStatus = "ASSIGNED" | "SUBMITTED" | "GRADED";
 
@@ -13,6 +14,8 @@ export type Assignment = {
   instructions: string;
   /** The task's level, if any. */
   level: Level | null;
+  /** The task's category, if any (the teacher's own). */
+  category: TaskCategory | null;
   teacherId: number;
   teacherName: string;
   studentId: number;
@@ -73,6 +76,7 @@ export type AssignmentQuery = {
   studentId?: number;
   taskId?: number;
   levelId?: number;
+  categoryId?: number;
   page?: number;
   size?: number;
 };
@@ -84,6 +88,7 @@ export async function listAssignments(query: AssignmentQuery = {}): Promise<Page
   if (query.studentId) params.set("studentId", String(query.studentId));
   if (query.taskId) params.set("taskId", String(query.taskId));
   if (query.levelId) params.set("levelId", String(query.levelId));
+  if (query.categoryId) params.set("categoryId", String(query.categoryId));
   return normalizePage(await apiFetch(`/api/assignments?${params}`));
 }
 

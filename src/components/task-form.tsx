@@ -1,23 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 
-import { saveTask, type TaskFormState } from "@/app/tasks/actions";
+import { createCategoryAction, saveTask, type TaskFormState } from "@/app/tasks/actions";
 import { Field, FormMessage, inputClass, primaryButtonClass } from "@/components/form-field";
 import { Markdown } from "@/components/markdown";
 import type { Level } from "@/lib/levels";
 
+type Category = { id: number; name: string };
+
 /**
- * Title, optional level and Markdown instructions, with a Write/Preview switch. `levels` are the active
- * levels; a task whose level was deactivated since keeps it as an extra option.
+ * Title, optional level and category, and Markdown instructions with a Write/Preview switch. `levels`
+ * are the active levels (a task whose level was deactivated since keeps it as an extra option);
+ * `categories` are the teacher's own, and a new one can be created without leaving the form.
  */
 export function TaskForm({
   task,
   levels,
+  categories,
 }: {
-  task?: { id: number; title: string; instructions: string; level: Level | null };
+  task?: { id: number; title: string; instructions: string; level: Level | null; category: Category | null };
   levels: Level[];
+  categories: Category[];
 }) {
   const [state, formAction, pending] = useActionState<TaskFormState, FormData>(saveTask.bind(null, task?.id ?? null), {});
   const [instructions, setInstructions] = useState(task?.instructions ?? "");
@@ -25,6 +30,8 @@ export function TaskForm({
   const title = state.values?.title ?? task?.title ?? "";
   const levelId = state.values?.levelId ?? (task?.level ? String(task.level.id) : "");
   const options = task?.level && !levels.some((l) => l.id === task.level?.id) ? [...levels, task.level] : levels;
+  const [categoryOptions, setCategoryOptions] = useState(categories);
+  const [categoryId, setCategoryId] = useState(state.values?.categoryId ?? (task?.category ? String(task.category.id) : ""));
 
   const tab = (active: boolean) =>
     `rounded-md px-3 py-1 text-xs font-bold ${active ? "bg-ink-200 dark:bg-ink-700" : "text-ink-500 hover:text-ink-800 dark:hover:text-ink-200"}`;
@@ -47,6 +54,17 @@ export function TaskForm({
           ))}
         </select>
       </Field>
+
+      <CategoryField
+        options={categoryOptions}
+        value={categoryId}
+        onChange={setCategoryId}
+        onCreated={(c) => {
+          setCategoryOptions((list) => [...list, c].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
+          setCategoryId(String(c.id));
+        }}
+        error={state.errors?.categoryId}
+      />
 
       <div className="flex flex-col gap-1 text-sm font-bold">
         <div className="flex items-center gap-2">
@@ -92,5 +110,85 @@ export function TaskForm({
         </Link>
       </div>
     </form>
+  );
+}
+
+/** The category select, plus "Nova categoria" to create one in place and select it. */
+function CategoryField({
+  options,
+  value,
+  onChange,
+  onCreated,
+  error,
+}: {
+  options: Category[];
+  value: string;
+  onChange: (value: string) => void;
+  onCreated: (category: Category) => void;
+  error?: string;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+  const [message, setMessage] = useState<string>();
+  const [pending, startTransition] = useTransition();
+
+  function create() {
+    startTransition(async () => {
+      const result = await createCategoryAction(name);
+      setMessage(result.message);
+      if (result.category) {
+        onCreated(result.category);
+        setAdding(false);
+        setName("");
+      }
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5 text-sm font-bold">
+      <label htmlFor="categoryId">Categoria (opcional)</label>
+      <div className="flex flex-wrap items-center gap-2">
+        <select id="categoryId" name="categoryId" value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} max-w-xs`}>
+          <option value="">Sem categoria</option>
+          {options.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        {!adding && (
+          <button type="button" onClick={() => setAdding(true)} className="text-xs font-bold text-brand-600 hover:underline">
+            + Nova categoria
+          </button>
+        )}
+      </div>
+      {adding && (
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Not a nested form: Enter creates the category instead of saving the task. */}
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (name.trim()) create();
+              }
+            }}
+            maxLength={60}
+            placeholder="Nome da categoria"
+            aria-label="Nome da nova categoria"
+            className={`${inputClass} max-w-xs font-normal`}
+            autoFocus
+          />
+          <button type="button" disabled={pending || !name.trim()} onClick={create} className="rounded-md border border-brand-600 px-3 py-1.5 text-xs font-bold text-brand-600 hover:bg-brand-50 disabled:opacity-50 dark:hover:bg-ink-900">
+            {pending ? "Criando..." : "Criar"}
+          </button>
+          <button type="button" onClick={() => { setAdding(false); setMessage(undefined); }} className="text-xs font-bold hover:underline">
+            Cancelar
+          </button>
+        </div>
+      )}
+      {(message ?? error) && <span className="text-xs font-normal text-pen">{message ?? error}</span>}
+    </div>
   );
 }
