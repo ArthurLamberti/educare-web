@@ -6,7 +6,7 @@ import { AssignmentStatusBadge } from "@/components/assignment-status";
 import { GradeForm } from "@/components/grade-form";
 import { Markdown } from "@/components/markdown";
 import { ApiError } from "@/lib/api";
-import { getAssignment } from "@/lib/assignments";
+import { formatScore, getAssignment } from "@/lib/assignments";
 import { requireUser } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
 
@@ -24,7 +24,7 @@ export default async function GradePage({ params }: PageProps<"/grading/[id]">) 
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   });
-  const { submission, grade } = a;
+  const { submission, grade, gradeDraft } = a;
 
   return (
     <section className="flex flex-col gap-6">
@@ -61,7 +61,19 @@ export default async function GradePage({ params }: PageProps<"/grading/[id]">) 
           </div>
           <div className="flex flex-col gap-2">
             <h2 className="text-lg font-semibold">{grade ? "Revisar nota" : "Nota"}</h2>
-            <GradeForm id={a.id} version={submission.version} score={grade?.score} feedback={grade?.feedback} />
+            {gradeDraft && (
+              <p className="text-sm text-ink-500">
+                Correção não enviada, salva em {formatDateTime(gradeDraft.savedAt, zone)}.
+                {grade && ` O aluno continua vendo a nota anterior (${formatScore(grade.score)}) até você enviar.`}
+              </p>
+            )}
+            <GradeForm
+              id={a.id}
+              version={submission.version}
+              score={gradeDraft ? gradeDraft.score : grade?.score}
+              feedback={gradeDraft ? gradeDraft.feedback : grade?.feedback}
+              graded={grade !== null}
+            />
           </div>
         </>
       )}

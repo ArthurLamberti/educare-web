@@ -51,7 +51,14 @@ export default async function GradingPage({ searchParams }: PageProps<"/grading"
                   )}
                 </td>
                 <td className="py-2">{a.studentName}</td>
-                <td className="py-2">{a.taskTitle}</td>
+                <td className="py-2">
+                  {a.taskTitle}
+                  {a.hasGradeDraft && (
+                    <span className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-bold text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                      Correção em andamento
+                    </span>
+                  )}
+                </td>
                 <td className="py-2 text-right">
                   <Link href={`/grading/${a.id}`} className="font-bold text-brand-600 hover:underline">
                     Corrigir

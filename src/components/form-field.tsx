@@ -4,6 +4,9 @@ export const inputClass =
 export const primaryButtonClass =
   "rounded-md bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-500 disabled:opacity-50";
 
+export const secondaryButtonClass =
+  "rounded-md border border-brand-600 px-4 py-2 text-sm font-bold text-brand-600 hover:bg-brand-50 disabled:opacity-50 dark:hover:bg-ink-900";
+
 export function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1.5 text-sm font-bold">

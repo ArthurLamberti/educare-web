@@ -11,15 +11,12 @@ import {
   type SendWordsState,
   type WordsFormState,
 } from "@/app/lessons/actions";
-import { Field, FormMessage, inputClass, primaryButtonClass } from "@/components/form-field";
+import { Field, FormMessage, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/form-field";
 import { SkippedWords } from "@/components/skipped-words";
 import { parseCardLines } from "@/lib/card-lines";
 import type { LessonWord } from "@/lib/lessons";
 
 const EXAMPLE = "went;foi\nto look up;procurar\nhouse;casa";
-
-const secondaryButtonClass =
-  "rounded-md border border-brand-600 px-4 py-2 text-sm font-bold text-brand-600 hover:bg-brand-50 disabled:opacity-50 dark:hover:bg-ink-900";
 
 /** Read-only list, for the lesson's student and the school's admins. */
 export function LessonWordList({ words }: { words: LessonWord[] }) {

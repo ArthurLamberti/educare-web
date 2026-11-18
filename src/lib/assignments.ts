@@ -24,6 +24,24 @@ export type Assignment = {
   submission: Submission | null;
   /** Present once graded. */
   grade: Grade | null;
+  /** The student's private draft: only returned to that student. */
+  draft: AnswerDraft | null;
+  /** The teacher's unsent correction: only returned to the task's teacher. */
+  gradeDraft: GradeDraft | null;
+  /** The task's teacher has an unsent correction (false for everyone else). */
+  hasGradeDraft: boolean;
+};
+
+export type AnswerDraft = {
+  /** Markdown; may be empty */
+  answer: string;
+  savedAt: string;
+};
+
+export type GradeDraft = {
+  score: number | null;
+  feedback: string | null;
+  savedAt: string;
 };
 
 export type Submission = {
@@ -81,6 +99,16 @@ export function unassign(id: number): Promise<void> {
 /** Submit or replace the answer (until graded). */
 export function submitAnswer(id: number, answer: string): Promise<Assignment> {
   return apiFetch(`/api/assignments/${id}/submission`, { method: "PUT", body: JSON.stringify({ answer }) });
+}
+
+/** The student's private draft (until graded); the teacher never sees it. */
+export function saveAnswerDraft(id: number, answer: string): Promise<Assignment> {
+  return apiFetch(`/api/assignments/${id}/draft`, { method: "PUT", body: JSON.stringify({ answer }) });
+}
+
+/** The teacher's unsent correction; the student never sees it. */
+export function saveGradeDraft(id: number, data: { score: number | null; feedback: string; version: number }): Promise<Assignment> {
+  return apiFetch(`/api/assignments/${id}/grade-draft`, { method: "PUT", body: JSON.stringify(data) });
 }
 
 /** Grade or revise; `version` is the submission version the teacher reviewed. */

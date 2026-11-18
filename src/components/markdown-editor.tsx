@@ -18,6 +18,7 @@ export function MarkdownEditor({
   warnUnsaved = false,
   error,
   onChange,
+  required = true,
 }: {
   name: string;
   label: string;
@@ -27,6 +28,8 @@ export function MarkdownEditor({
   warnUnsaved?: boolean;
   error?: string;
   onChange?: (value: string) => void;
+  /** Off when an empty text is valid (e.g. a draft); the server still checks what it needs. */
+  required?: boolean;
 }) {
   const [value, setValue] = useState(initial);
   const [preview, setPreview] = useState(false);
@@ -59,7 +62,7 @@ export function MarkdownEditor({
       <textarea
         name={name}
         aria-labelledby={`${name}-label`}
-        required
+        required={required}
         maxLength={maxLength}
         rows={rows}
         value={value}

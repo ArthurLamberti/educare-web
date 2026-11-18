@@ -105,7 +105,24 @@ export default async function AssignmentPage({ params }: PageProps<"/assignments
       </div>
 
       {isStudent && a.status !== "GRADED" ? (
-        <AnswerForm id={a.id} answer={submission?.answer ?? ""} submitted={submission !== null} />
+        <>
+          {/* While a draft differs from the sent answer, show what the teacher sees. */}
+          {submission && a.draft && a.draft.answer !== submission.answer && (
+            <div className="flex flex-col gap-2">
+              <h2 className="text-lg font-semibold">Resposta enviada</h2>
+              <p className="text-sm text-ink-500">É o que seu professor vê agora.</p>
+              <div className={box}>
+                <Markdown>{submission.answer}</Markdown>
+              </div>
+            </div>
+          )}
+          <AnswerForm
+            id={a.id}
+            answer={a.draft?.answer ?? submission?.answer ?? ""}
+            submitted={submission !== null}
+            draftSavedAt={a.draft ? formatDateTime(a.draft.savedAt, zone) : undefined}
+          />
+        </>
       ) : (
         <div className="flex flex-col gap-2">
           <h2 className="text-lg font-semibold">{isStudent ? "Sua resposta" : "Resposta"}</h2>
