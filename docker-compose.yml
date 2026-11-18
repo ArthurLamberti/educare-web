@@ -1,0 +1,21 @@
+# Builds the image locally and joins the API stack's network (educare-api: docker-compose.yml).
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ROOT_DOMAIN: ${ROOT_DOMAIN:-educare.arthurlamberti.com}
+    container_name: educare-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3002}:3000"
+    networks:
+      - educare-net
+    environment:
+      API_URL: ${API_URL:-http://educare-api:8080}
+      ROOT_DOMAIN: ${ROOT_DOMAIN:-educare.arthurlamberti.com}
+
+networks:
+  educare-net:
+    external: true

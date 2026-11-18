@@ -1,0 +1,25 @@
+# VPS compose. Uses the image published by CI on GHCR instead of building locally.
+# CI copies this file to the app folder on the VPS; the .env stays there (see .env.example).
+# Rollback: set IMAGE_TAG in .env to a staging-sha-<hash> tag and run `docker compose -f docker-compose.prod.yml up -d`.
+#
+# API connection: the web joins the `educare-net` network, created for the educare-api stack (educare-api,
+# educare-postgres), and talks to the API by container name, without going through the internet or nginx.
+services:
+  web:
+    image: ghcr.io/arthurlamberti/educare-web:${IMAGE_TAG:-latest}
+    container_name: educare-web
+    restart: unless-stopped
+    ports:
+      # Localhost only: the host's nginx proxies with TLS (session cookies are Secure in production)
+      - "127.0.0.1:${WEB_PORT:-3002}:3000"
+    networks:
+      - educare-net
+    environment:
+      # API container on educare-net (internal port 8080)
+      API_URL: ${API_URL:-http://educare-api:8080}
+      # Schools live at <school>.<ROOT_DOMAIN>; must match the domain the image was built with
+      ROOT_DOMAIN: ${ROOT_DOMAIN:-educare.arthurlamberti.com}
+
+networks:
+  educare-net:
+    external: true

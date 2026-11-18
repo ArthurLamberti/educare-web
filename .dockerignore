@@ -1,7 +1,12 @@
-.git
-.next
 node_modules
+.next
+.git
+.github
+.claude
+openspec
+*.log
+*.md
 .env*
 !.env.example
-*.md
 Dockerfile
+docker-compose*.yml

@@ -1,0 +1,134 @@
+name: CI
+
+# main: checks and image (`latest`). staging: the same, with image `staging`, and deploy to the VPS.
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+env:
+  # Domain baked into prerendered pages (repository variable ROOT_DOMAIN; default the production domain)
+  ROOT_DOMAIN: ${{ vars.ROOT_DOMAIN || 'educare.arthurlamberti.com' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+  docker:
+    needs: check
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    concurrency:
+      group: docker-image-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/arthurlamberti/educare-web
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=staging,enable=${{ github.ref == 'refs/heads/staging' }}
+            # The same commit is built on main and on staging: different prefixes so one build does not
+            # overwrite the other's image
+            type=sha,format=short,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,format=short,prefix=staging-sha-,enable=${{ github.ref == 'refs/heads/staging' }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ROOT_DOMAIN=${{ env.ROOT_DOMAIN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: docker
+    # Every push to staging deploys to the VPS
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      # App folder on the VPS (variable VPS_WEB_DIR; default /opt/educare-web)
+      APP_DIR: ${{ vars.VPS_WEB_DIR || '/opt/educare-web' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Keeps the VPS compose equal to the repository's (network, API URL); the .env there is not touched.
+      - name: Copy compose file to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: docker-compose.prod.yml
+          target: ${{ env.APP_DIR }}
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          # Staging image tag from docker/metadata-action (prefix staging-sha- + short sha)
+          IMAGE_TAG: staging-sha-${{ github.sha }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: IMAGE_TAG,GHCR_USER,GHCR_TOKEN,APP_DIR
+          script: |
+            set -eu
+            cd "$APP_DIR"
+            export IMAGE_TAG="$(printf '%.19s' "$IMAGE_TAG")"
+            # The network is created for the API stack; without it the web cannot reach educare-api
+            docker network inspect educare-net >/dev/null
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            docker compose -f docker-compose.prod.yml pull web
+            docker compose -f docker-compose.prod.yml up -d --no-build web
+            docker logout ghcr.io
+
+            sleep 5
+            if [ "$(docker inspect --format '{{.State.Running}}' educare-web)" != "true" ]; then
+              docker logs --tail 100 educare-web
+              exit 1
+            fi
+            docker image prune -f

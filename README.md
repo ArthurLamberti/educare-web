@@ -20,9 +20,21 @@ seeded by the API in its `dev` profile). Modern browsers resolve `*.localhost` t
 
 ## Production
 
-`Dockerfile` builds the standalone server (`output: "standalone"`). `ROOT_DOMAIN` is needed at build time
-(build arg) and at run time; `API_URL` at run time. Deployment (Compose, nginx, certificates) is described in
-the API repo: `educare-api/deploy/README.md`.
+`Dockerfile` builds the standalone server (`output: "standalone"`). `ROOT_DOMAIN` is a build arg (prerendered
+pages show it) and a runtime variable; `API_URL` is read at run time.
+
+- `docker-compose.yml`: builds the image locally. `docker-compose.prod.yml`: the VPS, with the image from GHCR.
+  Both join the external network `educare-net` of the API stack and call `http://educare-api:8080`; the web is
+  published on `127.0.0.1:${WEB_PORT:-3002}` for the host's nginx.
+- CI (`.github/workflows/ci.yml`): lint, typecheck and build on every push and PR. Push to `main` publishes
+  `ghcr.io/arthurlamberti/educare-web:latest`; push to `staging` publishes `staging` and deploys to the VPS
+  (copies `docker-compose.prod.yml` to `VPS_WEB_DIR`, default `/opt/educare-web`, and recreates the container).
+  Secrets of the `staging` environment: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_PORT` (optional).
+- Versions (release-please, `.github/workflows/release.yml`): each merge to `main` updates a release PR from
+  the `feat:`/`fix:` commits; merging it creates the tag, the GitHub Release, the `CHANGELOG.md` and the
+  versioned image. Do not create tags by hand.
+
+VPS setup, nginx and the wildcard certificate: `educare-api/docker-compose.md`.
 
 ## Schools, private teachers and sessions
 
