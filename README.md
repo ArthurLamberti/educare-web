@@ -18,6 +18,12 @@ Open http://demo.localhost:3000 and log in with `admin@demo.com` / `password123`
 seeded by the API in its `dev` profile). Modern browsers resolve `*.localhost` to your machine, so no
 `/etc/hosts` change is needed.
 
+## Production
+
+`Dockerfile` builds the standalone server (`output: "standalone"`). `ROOT_DOMAIN` is needed at build time
+(build arg) and at run time; `API_URL` at run time. Deployment (Compose, nginx, certificates) is described in
+the API repo: `educare-api/deploy/README.md`.
+
 ## Schools, private teachers and sessions
 
 Each school, and each private teacher's space, is served on its own subdomain (`<slug>.<ROOT_DOMAIN>`).
