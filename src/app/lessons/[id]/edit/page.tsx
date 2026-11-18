@@ -27,7 +27,7 @@ export default async function EditLessonPage({ params }: PageProps<"/lessons/[id
     <section className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold">Editar aula</h1>
       <LessonForm
-        lesson={{ id: lesson.id, studentName: lesson.studentName, date, time, durationMinutes: lesson.durationMinutes, topic: lesson.topic, notes: lesson.notes, meetingUrl: lesson.meetingUrl }}
+        lesson={{ id: lesson.id, studentName: lesson.studentName, date, time, durationMinutes: lesson.durationMinutes, topic: lesson.topic, notes: lesson.notes, meetingUrl: lesson.meetingUrl, virtualRoom: lesson.virtualRoom }}
         timeZone={user.tenant.timeZone}
       />
     </section>

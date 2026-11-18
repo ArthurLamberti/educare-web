@@ -4,6 +4,7 @@ import { EndSeriesButton } from "@/components/end-series-button";
 import { LessonCancelButton } from "@/components/lesson-cancel-button";
 import type { Role } from "@/lib/auth";
 import { formatDateTime, formatDay, formatTime, instantToZonedParts } from "@/lib/datetime";
+import { lessonRoomPath } from "@/lib/lesson-room";
 import type { Lesson } from "@/lib/lessons";
 
 /** Mirrors the API's 48-hour rule for change requests (display only). */
@@ -44,7 +45,7 @@ export function LessonList({ lessons, role, timeZone, actions = false, pendingLe
                   <Link href={`/lessons/${lesson.id}`} className="hover:underline">
                     {lesson.topic}
                   </Link>
-                  {lesson.meetingUrl && (
+                  {(lesson.virtualRoom || lesson.meetingUrl) && (
                     <span className="ml-2 rounded-full bg-ink-100 px-2 py-0.5 text-xs font-bold text-ink-700 dark:bg-ink-800 dark:text-ink-300">Online</span>
                   )}
                   {lesson.annotations && (
@@ -69,9 +70,9 @@ export function LessonList({ lessons, role, timeZone, actions = false, pendingLe
                   )}
                 </span>
                 <span className="text-ink-600 dark:text-ink-400">{otherParty(lesson, role)}</span>
-                {lesson.meetingUrl && lesson.status === "SCHEDULED" && role !== "ADMIN" && new Date(lesson.endsAt).getTime() > now && (
+                {(lesson.virtualRoom || lesson.meetingUrl) && lesson.status === "SCHEDULED" && role !== "ADMIN" && new Date(lesson.endsAt).getTime() > now && (
                   <a
-                    href={lesson.meetingUrl}
+                    href={lessonRoomPath(lesson.id)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="rounded-md bg-brand-600 px-3 py-1 text-xs font-bold text-white hover:bg-brand-500"

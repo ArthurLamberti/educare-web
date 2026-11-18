@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 
 import { saveLesson, type LessonFormState } from "@/app/lessons/actions";
+import type { RoomChoice } from "@/lib/lesson-room";
 import { WEEKDAYS } from "@/lib/weekdays";
 import { Field, FormMessage, inputClass, primaryButtonClass } from "@/components/form-field";
 
@@ -29,6 +30,7 @@ export type LessonFormValues = {
   topic: string;
   notes: string | null;
   meetingUrl: string | null;
+  virtualRoom: boolean;
 };
 
 function durationLabel(minutes: number) {
@@ -51,7 +53,9 @@ export function LessonForm({ lesson, students, timeZone }: { lesson?: LessonForm
     notes: state.values?.notes ?? lesson?.notes ?? "",
   };
   const [repeat, setRepeat] = useState(state.values?.repeat ?? false);
-  const [online, setOnline] = useState(state.values?.online ?? Boolean(lesson?.meetingUrl));
+  const [online, setOnline] = useState(state.values?.online ?? Boolean(lesson?.virtualRoom || lesson?.meetingUrl));
+  // New online lessons get a room created by Educare unless the teacher prefers their own link.
+  const [room, setRoom] = useState<RoomChoice>(state.values?.room ?? (lesson?.meetingUrl ? "link" : "virtual"));
   const meetingUrl = state.values?.meetingUrl ?? lesson?.meetingUrl ?? "";
   const [date, setDate] = useState(values.date);
   const [picked, setPicked] = useState<string[] | null>(state.values?.weekdays ?? null);
@@ -148,18 +152,44 @@ export function LessonForm({ lesson, students, timeZone }: { lesson?: LessonForm
           Aula online
         </label>
         {online && (
-          <Field label="Link da sala" error={state.errors?.meetingUrl}>
-            <input
-              name="meetingUrl"
-              type="url"
-              required
-              maxLength={500}
-              placeholder="https://meet.google.com/..."
-              defaultValue={meetingUrl}
-              key={`m-${k}`}
-              className={inputClass}
-            />
-          </Field>
+          <div className="flex flex-col gap-2 pl-6" role="radiogroup" aria-label="Sala da aula">
+            {(
+              [
+                ["virtual", "Sala do Educare", "Criada automaticamente. Professor e aluno entram pelo botão “Entrar na sala”."],
+                ["link", "Meu próprio link", "Use uma sala que você já tem (Zoom, Meet, Teams...)."],
+              ] as const
+            ).map(([value, label, hint]) => (
+              <label key={value} className="flex cursor-pointer items-start gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="room"
+                  value={value}
+                  checked={room === value}
+                  onChange={() => setRoom(value)}
+                  className="mt-0.5 size-4 accent-brand-600"
+                />
+                <span>
+                  <span className="font-bold">{label}</span>
+                  <span className="block text-xs text-ink-500">{hint}</span>
+                </span>
+              </label>
+            ))}
+            {room === "link" && (
+              <Field label="Link da sala" error={state.errors?.meetingUrl}>
+                <input
+                  name="meetingUrl"
+                  type="url"
+                  required
+                  maxLength={500}
+                  placeholder="https://..."
+                  defaultValue={meetingUrl}
+                  key={`m-${k}`}
+                  className={inputClass}
+                />
+              </Field>
+            )}
+            {room === "virtual" && state.errors?.meetingUrl && <span className="text-xs text-red-600">{state.errors.meetingUrl}</span>}
+          </div>
         )}
         {online && <span className="text-xs text-ink-500">O aluno vê o botão “Entrar na sala” na lista de aulas.{!lesson && repeat && " Vale para todas as aulas da série."}</span>}
       </fieldset>

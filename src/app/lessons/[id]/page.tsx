@@ -3,10 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { LessonAnnotationsForm } from "@/components/lesson-annotations-form";
+import { LessonWordList, LessonWords } from "@/components/lesson-words";
 import { ApiError } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { formatDateTime, formatTime } from "@/lib/datetime";
-import { getLesson } from "@/lib/lessons";
+import { lessonRoomPath } from "@/lib/lesson-room";
+import { getLesson, getLessonWords } from "@/lib/lessons";
 
 export const metadata: Metadata = { title: "Aula" };
 
@@ -16,7 +18,7 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[id]">)
   const { id } = await params;
   const lessonId = Number(id);
   if (!Number.isInteger(lessonId)) notFound();
-  const lesson = await getLesson(lessonId).catch((error) => {
+  const [lesson, words] = await Promise.all([getLesson(lessonId), getLessonWords(lessonId)]).catch((error) => {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   });
@@ -42,12 +44,12 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[id]">)
       </div>
 
       <div className="flex flex-wrap items-center gap-4 rounded-md border border-ink-200 px-4 py-3 dark:border-ink-800">
-        {lesson.meetingUrl ? (
+        {lesson.virtualRoom || lesson.meetingUrl ? (
           <>
             <span className="font-bold">Aula online</span>
             {scheduled && (
               <a
-                href={lesson.meetingUrl}
+                href={lessonRoomPath(lesson.id)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-md bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-500"
@@ -55,7 +57,7 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[id]">)
                 Entrar na sala
               </a>
             )}
-            <span className="min-w-0 truncate font-mono text-xs text-ink-500">{lesson.meetingUrl}</span>
+            {lesson.meetingUrl && <span className="min-w-0 truncate font-mono text-xs text-ink-500">{lesson.meetingUrl}</span>}
           </>
         ) : (
           <span className="font-bold">Aula presencial</span>
@@ -90,6 +92,20 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[id]">)
           </>
         ) : (
           <p className="text-ink-500">O professor ainda não fez anotações sobre esta aula.</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-xl">Palavras novas</h2>
+        {isTeacher ? (
+          <>
+            <p className="text-sm text-ink-500">
+              Liste o vocabulário novo da aula e envie para os flashcards de {lesson.studentName.split(" ")[0]} ou como tarefa de escrever frases.
+            </p>
+            <LessonWords lessonId={lesson.id} studentId={lesson.studentId} studentName={lesson.studentName} words={words} timeZone={zone} />
+          </>
+        ) : (
+          <LessonWordList words={words} />
         )}
       </div>
     </section>
