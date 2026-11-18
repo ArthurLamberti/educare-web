@@ -48,8 +48,11 @@ export function addCard(studentId: number, data: { front: string; back: string }
   return apiFetch(`/api/students/${studentId}/cards`, { method: "POST", body: JSON.stringify(data) });
 }
 
-/** Adds the cards in order; all are saved or none. */
-export function addCards(studentId: number, cards: { front: string; back: string }[]): Promise<Card[]> {
+/** Cards added by a batch, and the fronts skipped because the student already had them. */
+export type CardBatchResult = { added: Card[]; skipped: string[] };
+
+/** Adds the cards in order, skipping fronts the student already has (case and spaces ignored). */
+export function addCards(studentId: number, cards: { front: string; back: string }[]): Promise<CardBatchResult> {
   return apiFetch(`/api/students/${studentId}/cards/batch`, { method: "POST", body: JSON.stringify({ cards }) });
 }
 

@@ -12,6 +12,7 @@ import {
   type WordsFormState,
 } from "@/app/lessons/actions";
 import { Field, FormMessage, inputClass, primaryButtonClass } from "@/components/form-field";
+import { SkippedWords } from "@/components/skipped-words";
 import { parseCardLines } from "@/lib/card-lines";
 import type { LessonWord } from "@/lib/lessons";
 
@@ -171,7 +172,7 @@ function SendToFlashcards({ lessonId, studentId, firstName, pending }: { lessonI
     <form action={action} className="flex flex-col gap-2 rounded-md border border-ink-200 p-3 dark:border-ink-800">
       <h3 className="text-sm font-semibold">Flashcards</h3>
       <p className="text-xs text-ink-500">Cada palavra vira um cartão (palavra na frente, tradução no verso) para {firstName} revisar.</p>
-      {state.sent !== undefined && (
+      {state.sent !== undefined && state.sent > 0 && (
         <p role="status" className="text-sm text-green-800 dark:text-green-300">
           {plural(state.sent)} {state.sent === 1 ? "enviada" : "enviadas"}.{" "}
           <Link href={`/students/${studentId}/flashcards`} className="font-bold underline">
@@ -179,6 +180,7 @@ function SendToFlashcards({ lessonId, studentId, firstName, pending }: { lessonI
           </Link>
         </p>
       )}
+      <SkippedWords words={state.skipped} />
       <FormMessage message={state.message} />
       <div>
         {pending > 0 ? (

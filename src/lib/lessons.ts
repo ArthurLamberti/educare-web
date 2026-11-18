@@ -118,8 +118,11 @@ export function deleteLessonWord(id: number): Promise<void> {
   return apiFetch(`/api/lesson-words/${id}`, { method: "DELETE" });
 }
 
-/** One card per word not yet sent, for the lesson's student. */
-export function sendLessonWordsToFlashcards(lessonId: number): Promise<LessonWord[]> {
+/** The lesson's words after sending, and those skipped because the student already had them as cards. */
+export type LessonWordFlashcardsResult = { words: LessonWord[]; skipped: string[] };
+
+/** One card per word not yet sent, for the lesson's student; words already in the flashcards are skipped. */
+export function sendLessonWordsToFlashcards(lessonId: number): Promise<LessonWordFlashcardsResult> {
   return apiFetch(`/api/lessons/${lessonId}/words/flashcards`, { method: "POST" });
 }
 

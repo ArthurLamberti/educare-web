@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 
 import { addCardsAction, type BatchState } from "@/app/flashcards/actions";
 import { FormMessage, inputClass, primaryButtonClass } from "@/components/form-field";
+import { SkippedWords } from "@/components/skipped-words";
 import { MAX_BATCH, parseCardLines } from "@/lib/card-lines";
 
 const EXAMPLE = "to go;ir\nto eat;comer\nhouse;casa";
@@ -29,13 +30,14 @@ function BulkFields({ state, formAction, pending }: { state: BatchState; formAct
       <h3 className="text-sm font-semibold">Adicionar várias palavras</h3>
       <p className="text-xs text-ink-500">
         Uma por linha, no formato <code className="font-mono">palavra;tradução</code>. Até {MAX_BATCH} por vez; se alguma linha tiver
-        problema, nenhuma é salva.
+        problema, nenhuma é salva. Palavras que o aluno já tem são ignoradas.
       </p>
-      {state.added !== undefined && (
+      {state.added !== undefined && state.added > 0 && (
         <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800 dark:bg-green-950 dark:text-green-300">
           {state.added} {state.added === 1 ? "palavra adicionada" : "palavras adicionadas"} à lista.
         </p>
       )}
+      <SkippedWords words={state.skipped} />
       <FormMessage message={state.message} />
       <textarea
         name="lines"

@@ -20,7 +20,15 @@ export type FormState<F extends string> = {
 
 type CardFormState = FormState<"front" | "back">;
 
+const DUPLICATE_CARD = "Essa palavra já está nos flashcards do aluno.";
+
+/** The API refused a card because the student already has its front. */
+function isDuplicate(error: ApiError) {
+  return error.status === 409 && (error.problem.detail ?? "").startsWith("The student already has a card");
+}
+
 function failure(error: unknown, values: Record<"front" | "back", string>): CardFormState {
+  if (error instanceof ApiError && isDuplicate(error)) return { errors: { front: DUPLICATE_CARD }, values };
   if (error instanceof ApiError) return { message: error.message, errors: error.problem.errors as CardFormState["errors"], values };
   return { message: error instanceof Error ? error.message : "Erro inesperado", values };
 }
@@ -73,19 +81,25 @@ export type BatchState = {
   text?: string;
   /** Cards added by the last successful submit. */
   added?: number;
+  /** Fronts skipped by the last submit because the student already had them. */
+  skipped?: string[];
   done?: number;
 };
 
-/** "palavra;tradução" per line; nothing is saved while any line has a problem. */
+/** "palavra;tradução" per line; nothing is saved while any line has a problem. Words the student already has are skipped. */
 export async function addCardsAction(studentId: number, prev: BatchState, formData: FormData): Promise<BatchState> {
   await requireUser(["TEACHER"]);
   const text = String(formData.get("lines") ?? "");
   const parsed = parseCardLines(text);
   if (parsed.errors.length > 0) return { errors: parsed.errors, text };
   if (parsed.cards.length === 0) return { errors: ["Cole pelo menos uma linha no formato palavra;tradução."], text };
+  let result;
   try {
-    await addCards(studentId, parsed.cards);
+    result = await addCards(studentId, parsed.cards);
   } catch (error) {
+    if (error instanceof ApiError && error.status === 409 && error.problem.detail?.startsWith("All these cards")) {
+      return { message: "Todas essas palavras já estão nos flashcards do aluno.", text };
+    }
     if (error instanceof ApiError) {
       // Field errors come as "cards[3].back"; point them at the pasted line.
       const errors = Object.entries((error.problem.errors ?? {}) as Record<string, string>).map(([field, detail]) => {
@@ -97,5 +111,5 @@ export async function addCardsAction(studentId: number, prev: BatchState, formDa
     return { message: error instanceof Error ? error.message : "Erro inesperado", text };
   }
   refresh();
-  return { added: parsed.cards.length, done: (prev.done ?? 0) + 1 };
+  return { added: result.added.length, skipped: result.skipped, done: (prev.done ?? 0) + 1 };
 }

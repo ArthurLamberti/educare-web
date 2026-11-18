@@ -212,17 +212,28 @@ export async function deleteWordAction(id: number): Promise<{ message?: string }
   return {};
 }
 
-export type SendWordsState = { message?: string; sent?: number; taskId?: number; dueError?: string; done?: number };
+export type SendWordsState = {
+  message?: string;
+  sent?: number;
+  /** Words skipped because the student already had them as cards. */
+  skipped?: string[];
+  taskId?: number;
+  dueError?: string;
+  done?: number;
+};
 
 /** Words not yet sent become cards of the lesson's student. */
 export async function sendWordsToFlashcardsAction(lessonId: number, prev: SendWordsState): Promise<SendWordsState> {
   await requireUser(["TEACHER"]);
   let sent: number;
+  let skipped: string[];
   try {
-    // The words just sent share the newest timestamp.
-    const times = (await sendLessonWordsToFlashcards(lessonId)).map((w) => w.flashcardSentAt).filter((t) => t !== null);
+    const result = await sendLessonWordsToFlashcards(lessonId);
+    // The words just sent share the newest timestamp; the skipped ones are among them.
+    const times = result.words.map((w) => w.flashcardSentAt).filter((t) => t !== null);
     const newest = times.reduce((a, b) => (a > b ? a : b), "");
-    sent = times.filter((t) => t === newest).length;
+    skipped = result.skipped;
+    sent = times.filter((t) => t === newest).length - skipped.length;
   } catch (error) {
     if (error instanceof ApiError && error.status === 409) {
       return { message: error.problem.detail?.includes("at most") ? "O aluno atingiu o limite de flashcards." : "Todas as palavras já estão nos flashcards do aluno." };
@@ -231,7 +242,7 @@ export async function sendWordsToFlashcardsAction(lessonId: number, prev: SendWo
     throw error;
   }
   refresh();
-  return { sent, done: (prev.done ?? 0) + 1 };
+  return { sent, skipped, done: (prev.done ?? 0) + 1 };
 }
 
 /** Words not yet in a task become a sentence-writing task for the student; the due date is the school's wall clock. */
