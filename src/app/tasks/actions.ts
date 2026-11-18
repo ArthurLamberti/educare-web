@@ -13,17 +13,22 @@ export type ActionState = { message?: string };
 
 export type TaskFormState = {
   message?: string;
-  errors?: Partial<Record<"title" | "instructions", string>>;
-  values?: { title: string; instructions: string };
+  errors?: Partial<Record<"title" | "instructions" | "levelId", string>>;
+  values?: { title: string; instructions: string; levelId: string };
 };
 
 export async function saveTask(id: number | null, _prev: TaskFormState, formData: FormData): Promise<TaskFormState> {
   await requireUser(["TEACHER"]);
-  const values = { title: String(formData.get("title") ?? "").trim(), instructions: String(formData.get("instructions") ?? "").trim() };
+  const values = {
+    title: String(formData.get("title") ?? "").trim(),
+    instructions: String(formData.get("instructions") ?? "").trim(),
+    levelId: String(formData.get("levelId") ?? ""),
+  };
+  const input = { title: values.title, instructions: values.instructions, levelId: Number(values.levelId) > 0 ? Number(values.levelId) : null };
   let taskId = id;
   try {
-    if (id === null) taskId = (await createTask(values)).id;
-    else await updateTask(id, values);
+    if (id === null) taskId = (await createTask(input)).id;
+    else await updateTask(id, input);
   } catch (error) {
     if (error instanceof ApiError) return { message: error.message, errors: error.problem.errors, values };
     return { message: error instanceof Error ? error.message : "Erro inesperado", values };

@@ -4,8 +4,14 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const selectClass = "rounded-md border border-ink-300 bg-white px-2 py-1 dark:border-ink-700 dark:bg-ink-900";
 
-/** Student and status filters kept in the URL (`?studentId=&status=`). */
-export function AssignmentFilters({ students }: { students: { id: number; name: string }[] }) {
+/** Student, status and level filters kept in the URL (`?studentId=&status=&levelId=`). */
+export function AssignmentFilters({
+  students,
+  levels,
+}: {
+  students: { id: number; name: string }[];
+  levels: { id: number; code: string; name: string }[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -39,6 +45,17 @@ export function AssignmentFilters({ students }: { students: { id: number; name: 
           <option value="ASSIGNED">Atribuída</option>
           <option value="SUBMITTED">Entregue</option>
           <option value="GRADED">Corrigida</option>
+        </select>
+      </label>
+      <label className="flex items-center gap-2">
+        Nível
+        <select value={searchParams.get("levelId") ?? ""} onChange={(e) => update("levelId", e.target.value)} className={selectClass}>
+          <option value="">Todos</option>
+          {levels.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.code} · {l.name}
+            </option>
+          ))}
         </select>
       </label>
     </div>

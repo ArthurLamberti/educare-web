@@ -6,13 +6,25 @@ import { useActionState, useState } from "react";
 import { saveTask, type TaskFormState } from "@/app/tasks/actions";
 import { Field, FormMessage, inputClass, primaryButtonClass } from "@/components/form-field";
 import { Markdown } from "@/components/markdown";
+import type { Level } from "@/lib/levels";
 
-/** Title and Markdown instructions, with a Write/Preview switch. */
-export function TaskForm({ task }: { task?: { id: number; title: string; instructions: string } }) {
+/**
+ * Title, optional level and Markdown instructions, with a Write/Preview switch. `levels` are the active
+ * levels; a task whose level was deactivated since keeps it as an extra option.
+ */
+export function TaskForm({
+  task,
+  levels,
+}: {
+  task?: { id: number; title: string; instructions: string; level: Level | null };
+  levels: Level[];
+}) {
   const [state, formAction, pending] = useActionState<TaskFormState, FormData>(saveTask.bind(null, task?.id ?? null), {});
   const [instructions, setInstructions] = useState(task?.instructions ?? "");
   const [preview, setPreview] = useState(false);
   const title = state.values?.title ?? task?.title ?? "";
+  const levelId = state.values?.levelId ?? (task?.level ? String(task.level.id) : "");
+  const options = task?.level && !levels.some((l) => l.id === task.level?.id) ? [...levels, task.level] : levels;
 
   const tab = (active: boolean) =>
     `rounded-md px-3 py-1 text-xs font-bold ${active ? "bg-ink-200 dark:bg-ink-700" : "text-ink-500 hover:text-ink-800 dark:hover:text-ink-200"}`;
@@ -23,6 +35,17 @@ export function TaskForm({ task }: { task?: { id: number; title: string; instruc
 
       <Field label="Título" error={state.errors?.title}>
         <input name="title" required maxLength={200} defaultValue={title} key={`t-${title}`} className={inputClass} />
+      </Field>
+
+      <Field label="Nível (opcional)" error={state.errors?.levelId}>
+        <select name="levelId" defaultValue={levelId} key={`l-${levelId}`} className={`${inputClass} max-w-xs`}>
+          <option value="">Sem nível</option>
+          {options.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.code} · {l.name}
+            </option>
+          ))}
+        </select>
       </Field>
 
       <div className="flex flex-col gap-1 text-sm font-bold">

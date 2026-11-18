@@ -1,6 +1,7 @@
 import "server-only";
 
 import { apiFetch, normalizePage, type Page } from "./api";
+import type { Level } from "./levels";
 
 export type AssignmentStatus = "ASSIGNED" | "SUBMITTED" | "GRADED";
 
@@ -10,6 +11,8 @@ export type Assignment = {
   taskTitle: string;
   /** Markdown */
   instructions: string;
+  /** The task's level, if any. */
+  level: Level | null;
   teacherId: number;
   teacherName: string;
   studentId: number;
@@ -69,6 +72,7 @@ export type AssignmentQuery = {
   statuses?: AssignmentStatus[];
   studentId?: number;
   taskId?: number;
+  levelId?: number;
   page?: number;
   size?: number;
 };
@@ -79,6 +83,7 @@ export async function listAssignments(query: AssignmentQuery = {}): Promise<Page
   for (const status of query.statuses ?? []) params.append("status", status);
   if (query.studentId) params.set("studentId", String(query.studentId));
   if (query.taskId) params.set("taskId", String(query.taskId));
+  if (query.levelId) params.set("levelId", String(query.levelId));
   return normalizePage(await apiFetch(`/api/assignments?${params}`));
 }
 

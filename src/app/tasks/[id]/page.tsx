@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AssignForm } from "@/components/assign-form";
 import { AssignmentStatusBadge } from "@/components/assignment-status";
+import { LevelBadge } from "@/components/level-badge";
 import { Markdown } from "@/components/markdown";
 import { TaskActions, UnassignButton } from "@/components/task-actions";
 import { ApiError } from "@/lib/api";
@@ -47,7 +48,14 @@ export default async function TaskPage({ params, searchParams }: PageProps<"/tas
             {task.title}
             {task.archived && <span className="ml-3 rounded-full bg-ink-100 px-2 py-0.5 align-middle text-xs font-bold text-ink-600 dark:bg-ink-800 dark:text-ink-300">Arquivada</span>}
           </h1>
-          <span className="text-xs text-ink-500">Última atualização: {formatDateTime(task.updatedAt, zone)}</span>
+          <span className="flex items-center gap-2 text-xs text-ink-500">
+            {task.level && (
+              <>
+                <LevelBadge level={task.level} /> {task.level.name} ·
+              </>
+            )}
+            Última atualização: {formatDateTime(task.updatedAt, zone)}
+          </span>
         </div>
         <div className="ml-auto flex items-start gap-2">
           <Link href={`/tasks/${task.id}/edit`} className="rounded-md px-3 py-1.5 text-sm font-bold text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950">

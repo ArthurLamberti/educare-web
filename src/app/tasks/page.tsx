@@ -3,25 +3,33 @@ import Form from "next/form";
 import Link from "next/link";
 
 import { inputClass } from "@/components/form-field";
+import { LevelBadge } from "@/components/level-badge";
 import { requireUser } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
+import { getLevels } from "@/lib/levels";
 import { listTasks } from "@/lib/tasks";
 
 export const metadata: Metadata = { title: "Tarefas" };
 
 const PAGE_SIZE = 20;
 
-/** The teacher's task library: newest first, title search, archived hidden unless asked. */
+/** The teacher's task library: newest first, title search, level filter, archived hidden unless asked. */
 export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   const user = await requireUser(["TEACHER"]);
-  const { q: rawQ, archived, page, deleted } = await searchParams;
+  const { q: rawQ, archived, page, deleted, levelId: rawLevel } = await searchParams;
   const q = typeof rawQ === "string" ? rawQ.trim() : "";
   const includeArchived = archived === "1";
+  const levelId = Number(rawLevel) > 0 ? Number(rawLevel) : undefined;
   const pageNumber = Math.max(0, Number(page) || 0);
-  const tasks = await listTasks({ q, includeArchived, page: pageNumber, size: PAGE_SIZE });
+  const [tasks, levels] = await Promise.all([listTasks({ q, includeArchived, levelId, page: pageNumber, size: PAGE_SIZE }), getLevels()]);
 
   const link = (p: number) => {
-    const params = new URLSearchParams({ ...(q && { q }), ...(includeArchived && { archived: "1" }), page: String(p) });
+    const params = new URLSearchParams({
+      ...(q && { q }),
+      ...(includeArchived && { archived: "1" }),
+      ...(levelId && { levelId: String(levelId) }),
+      page: String(p),
+    });
     return `/tasks?${params}`;
   };
 
@@ -42,6 +50,14 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
 
       <Form action="/tasks" className="flex flex-wrap items-center gap-4 text-sm">
         <input name="q" type="search" defaultValue={q} placeholder="Buscar pelo título" aria-label="Buscar pelo título" className={`${inputClass} max-w-xs`} />
+        <select name="levelId" defaultValue={levelId ?? ""} aria-label="Nível" className={`${inputClass} max-w-48`}>
+          <option value="">Todos os níveis</option>
+          {levels.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.code} · {l.name}
+            </option>
+          ))}
+        </select>
         <label className="flex items-center gap-2">
           <input type="checkbox" name="archived" value="1" defaultChecked={includeArchived} />
           Mostrar arquivadas
@@ -53,7 +69,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
 
       {tasks.content.length === 0 ? (
         <p className="text-ink-500">
-          {q ? `Nenhuma tarefa encontrada para "${q}".` : (
+          {q || levelId ? "Nenhuma tarefa encontrada com esses filtros." : (
             <>
               Nenhuma tarefa ainda. <Link href="/tasks/new" className="text-brand-600 hover:underline">Escreva sua primeira tarefa</Link>.
             </>
@@ -75,6 +91,11 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
                   <Link href={`/tasks/${t.id}`} className="font-bold hover:text-brand-600 hover:underline">
                     {t.title}
                   </Link>
+                  {t.level && (
+                    <span className="ml-2">
+                      <LevelBadge level={t.level} />
+                    </span>
+                  )}
                   {t.archived && <span className="ml-2 rounded-full bg-ink-100 px-2 py-0.5 text-xs text-ink-600 dark:bg-ink-800 dark:text-ink-300">Arquivada</span>}
                 </td>
                 <td className="py-2 text-ink-600 dark:text-ink-400">{formatDateTime(t.updatedAt, user.tenant.timeZone)}</td>

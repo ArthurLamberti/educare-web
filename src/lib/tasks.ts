@@ -1,12 +1,14 @@
 import "server-only";
 
 import { apiFetch, normalizePage, type Page } from "./api";
+import type { Level } from "./levels";
 
 export type Task = {
   id: number;
   title: string;
   /** Markdown */
   instructions: string;
+  level: Level | null;
   archived: boolean;
   /** Assignments in any status; a task with assignments cannot be deleted, only archived. */
   assignmentCount: number;
@@ -14,12 +16,15 @@ export type Task = {
   updatedAt: string;
 };
 
-export type TaskInput = { title: string; instructions: string };
+export type TaskInput = { title: string; instructions: string; levelId: number | null };
 
 /** The current teacher's tasks, newest first. */
-export async function listTasks(query: { q?: string; includeArchived?: boolean; page?: number; size?: number } = {}): Promise<Page<Task>> {
+export async function listTasks(
+  query: { q?: string; includeArchived?: boolean; levelId?: number; page?: number; size?: number } = {},
+): Promise<Page<Task>> {
   const params = new URLSearchParams({ page: String(query.page ?? 0), size: String(query.size ?? 20) });
   if (query.q) params.set("q", query.q);
+  if (query.levelId) params.set("levelId", String(query.levelId));
   if (query.includeArchived) params.set("includeArchived", "true");
   return normalizePage(await apiFetch(`/api/tasks?${params}`));
 }

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AssignmentFilters } from "@/components/assignment-filters";
+import { LevelBadge } from "@/components/level-badge";
 import { AssignmentStatusBadge } from "@/components/assignment-status";
+import { getLevels } from "@/lib/levels";
 import { listAssignments, type Assignment, type AssignmentStatus } from "@/lib/assignments";
 import { requireUser, type User } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
@@ -71,6 +73,7 @@ function StudentItem({ assignment: a, zone }: { assignment: Assignment; zone: st
         }`}
       >
         <span className="font-bold">{a.taskTitle}</span>
+        <LevelBadge level={a.level} />
         <span className="text-ink-600 dark:text-ink-400">{a.teacherName}</span>
         <span className="ml-auto flex items-center gap-3">
           <span className={a.overdue ? "font-bold text-red-700 dark:text-red-400" : "text-ink-600 dark:text-ink-400"}>
@@ -88,15 +91,22 @@ async function AssignmentOverview({ user, params }: { user: User; params: Record
   const isAdmin = user.role === "ADMIN";
   const studentId = Number(params.studentId) > 0 ? Number(params.studentId) : undefined;
   const status = STATUSES.find((s) => s === params.status);
+  const levelId = Number(params.levelId) > 0 ? Number(params.levelId) : undefined;
   const pageNumber = Math.max(0, Number(params.page) || 0);
 
-  const [assignments, students] = await Promise.all([
-    listAssignments({ studentId, statuses: status ? [status] : [], page: pageNumber, size: PAGE_SIZE }),
+  const [assignments, students, levels] = await Promise.all([
+    listAssignments({ studentId, levelId, statuses: status ? [status] : [], page: pageNumber, size: PAGE_SIZE }),
     listStudents(0, 200, { includeInactive: true }),
+    getLevels(),
   ]);
 
   const link = (p: number) => {
-    const q = new URLSearchParams({ ...(studentId && { studentId: String(studentId) }), ...(status && { status }), page: String(p) });
+    const q = new URLSearchParams({
+      ...(studentId && { studentId: String(studentId) }),
+      ...(status && { status }),
+      ...(levelId && { levelId: String(levelId) }),
+      page: String(p),
+    });
     return `/assignments?${q}`;
   };
 
@@ -111,11 +121,11 @@ async function AssignmentOverview({ user, params }: { user: User; params: Record
         )}
       </div>
 
-      <AssignmentFilters students={students.content.map((s) => ({ id: s.id, name: s.name }))} />
+      <AssignmentFilters students={students.content.map((s) => ({ id: s.id, name: s.name }))} levels={levels} />
       <p className="text-xs text-ink-500">Horários no fuso da escola ({zone.replaceAll("_", " ")}).</p>
 
       {assignments.content.length === 0 ? (
-        <p className="text-ink-500">{studentId || status ? "Nenhuma atividade com esses filtros." : "Nenhuma atividade ainda."}</p>
+        <p className="text-ink-500">{studentId || status || levelId ? "Nenhuma atividade com esses filtros." : "Nenhuma atividade ainda."}</p>
       ) : (
         <table className="w-full text-left text-sm">
           <thead className="border-b border-ink-200 text-ink-500 dark:border-ink-800">
@@ -134,6 +144,11 @@ async function AssignmentOverview({ user, params }: { user: User; params: Record
                   <Link href={`/assignments/${a.id}`} className="font-bold hover:text-brand-600 hover:underline">
                     {a.taskTitle}
                   </Link>
+                  {a.level && (
+                    <span className="ml-2">
+                      <LevelBadge level={a.level} />
+                    </span>
+                  )}
                 </td>
                 {isAdmin && <td className="py-2">{a.teacherName}</td>}
                 <td className="py-2">{a.studentName}</td>
