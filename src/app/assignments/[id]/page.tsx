@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { AnswerForm } from "@/components/answer-form";
 import { AssignmentStatusBadge } from "@/components/assignment-status";
 import { Markdown } from "@/components/markdown";
+import { QuestionAnswers, QuestionList } from "@/components/question-answers";
 import { ApiError } from "@/lib/api";
 import { formatScore, getAssignment } from "@/lib/assignments";
 import { requireUser } from "@/lib/auth";
@@ -96,28 +97,45 @@ export default async function AssignmentPage({ params }: PageProps<"/assignments
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">Instruções</h2>
-        {/* Once submitted, show the instructions as they were when answered. */}
-        <div className={box}>
-          <Markdown>{submission?.instructionsSnapshot ?? a.instructions}</Markdown>
+      {/* Once submitted, show the instructions as they were when answered. */}
+      {(submission?.instructionsSnapshot ?? a.instructions).trim() && (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-semibold">Instruções</h2>
+          <div className={box}>
+            <Markdown>{submission?.instructionsSnapshot ?? a.instructions}</Markdown>
+          </div>
         </div>
-      </div>
+      )}
+      {/* The student answers the questions in the form below; others see them here until answered. */}
+      {!submission && !isStudent && a.questions.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-semibold">Perguntas</h2>
+          <QuestionList prompts={a.questions.map((q) => q.prompt)} />
+        </div>
+      )}
 
       {isStudent && a.status !== "GRADED" ? (
         <>
           {/* While a draft differs from the sent answer, show what the teacher sees. */}
-          {submission && a.draft && a.draft.answer !== submission.answer && (
-            <div className="flex flex-col gap-2">
-              <h2 className="text-lg font-semibold">Resposta enviada</h2>
-              <p className="text-sm text-ink-500">É o que seu professor vê agora.</p>
-              <div className={box}>
-                <Markdown>{submission.answer}</Markdown>
+          {submission &&
+            a.draft &&
+            (a.draft.answer !== submission.answer || a.draft.answers.some((d, i) => d !== submission.answers[i]?.answer)) && (
+              <div className="flex flex-col gap-2">
+                <h2 className="text-lg font-semibold">Resposta enviada</h2>
+                <p className="text-sm text-ink-500">É o que seu professor vê agora.</p>
+                <QuestionAnswers answers={submission.answers} />
+                {submission.answer.trim() && (
+                  <div className={box}>
+                    <Markdown>{submission.answer}</Markdown>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
           <AnswerForm
             id={a.id}
+            // After the first submission the student answers the questions copied then.
+            questions={submission ? submission.answers.map((x) => x.prompt) : a.questions.map((q) => q.prompt)}
+            answers={a.draft?.answers.length ? a.draft.answers : (submission?.answers.map((x) => x.answer) ?? [])}
             answer={a.draft?.answer ?? submission?.answer ?? ""}
             submitted={submission !== null}
             draftSavedAt={a.draft ? formatDateTime(a.draft.savedAt, zone) : undefined}
@@ -126,7 +144,20 @@ export default async function AssignmentPage({ params }: PageProps<"/assignments
       ) : (
         <div className="flex flex-col gap-2">
           <h2 className="text-lg font-semibold">{isStudent ? "Sua resposta" : "Resposta"}</h2>
-          <div className={box}>{submission ? <Markdown>{submission.answer}</Markdown> : <p className="text-sm text-ink-500">Ainda não entregue.</p>}</div>
+          {!submission ? (
+            <div className={box}>
+              <p className="text-sm text-ink-500">Ainda não entregue.</p>
+            </div>
+          ) : (
+            <>
+              <QuestionAnswers answers={submission.answers} />
+              {(submission.answer.trim() || submission.answers.length === 0) && (
+                <div className={box}>
+                  <Markdown>{submission.answer}</Markdown>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </section>

@@ -6,6 +6,7 @@ import { AssignForm } from "@/components/assign-form";
 import { AssignmentStatusBadge } from "@/components/assignment-status";
 import { CategoryBadge, LevelBadge } from "@/components/level-badge";
 import { Markdown } from "@/components/markdown";
+import { QuestionList } from "@/components/question-answers";
 import { TaskActions, UnassignButton } from "@/components/task-actions";
 import { ApiError } from "@/lib/api";
 import { listAssignments } from "@/lib/assignments";
@@ -70,9 +71,17 @@ export default async function TaskPage({ params, searchParams }: PageProps<"/tas
         </div>
       </div>
 
-      <div className="rounded-lg border border-ink-200 p-4 dark:border-ink-800">
-        <Markdown>{task.instructions}</Markdown>
-      </div>
+      {task.instructions.trim() && (
+        <div className="rounded-lg border border-ink-200 p-4 dark:border-ink-800">
+          <Markdown>{task.instructions}</Markdown>
+        </div>
+      )}
+      {task.questions.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-semibold">Perguntas</h2>
+          <QuestionList prompts={task.questions.map((q) => q.prompt)} />
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Atribuir</h2>

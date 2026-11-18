@@ -14,8 +14,8 @@ export type ActionState = { message?: string };
 
 export type TaskFormState = {
   message?: string;
-  errors?: Partial<Record<"title" | "instructions" | "levelId" | "categoryId", string>>;
-  values?: { title: string; instructions: string; levelId: string; categoryId: string };
+  errors?: Partial<Record<"title" | "instructions" | "levelId" | "categoryId" | "questions", string>>;
+  values?: { title: string; instructions: string; levelId: string; categoryId: string; questions: string[] };
 };
 
 export async function saveTask(id: number | null, _prev: TaskFormState, formData: FormData): Promise<TaskFormState> {
@@ -25,8 +25,14 @@ export async function saveTask(id: number | null, _prev: TaskFormState, formData
     instructions: String(formData.get("instructions") ?? "").trim(),
     levelId: String(formData.get("levelId") ?? ""),
     categoryId: String(formData.get("categoryId") ?? ""),
+    // One "question" field per question, in order; blank ones are dropped.
+    questions: formData.getAll("question").map((q) => String(q).trim()).filter(Boolean),
   };
+  if (!values.instructions && values.questions.length === 0) {
+    return { errors: { instructions: "Escreva as instruções ou adicione pelo menos uma pergunta." }, values };
+  }
   const input = {
+    questions: values.questions.map((prompt) => ({ prompt })),
     title: values.title,
     instructions: values.instructions,
     levelId: Number(values.levelId) > 0 ? Number(values.levelId) : null,
@@ -37,7 +43,12 @@ export async function saveTask(id: number | null, _prev: TaskFormState, formData
     if (id === null) taskId = (await createTask(input)).id;
     else await updateTask(id, input);
   } catch (error) {
-    if (error instanceof ApiError) return { message: error.message, errors: error.problem.errors, values };
+    if (error instanceof ApiError) {
+      const errors = { ...error.problem.errors };
+      // e.g. "questions[2].prompt" → one message on the questions block
+      if (Object.keys(errors).some((k) => k.startsWith("questions"))) errors.questions = "Cada pergunta pode ter até 2000 caracteres; no máximo 50 perguntas.";
+      return { message: error.message, errors, values };
+    }
     return { message: error instanceof Error ? error.message : "Erro inesperado", values };
   }
   redirect(`/tasks/${taskId}${id === null ? "?created=1" : ""}`);

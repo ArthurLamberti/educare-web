@@ -32,7 +32,7 @@ export default async function EditTaskPage({ params }: PageProps<"/tasks/[id]/ed
         </p>
       )}
       <TaskForm
-        task={{ id: task.id, title: task.title, instructions: task.instructions, level: task.level, category: task.category }}
+        task={{ id: task.id, title: task.title, instructions: task.instructions, level: task.level, category: task.category, questions: task.questions }}
         levels={levels}
         categories={categories}
       />

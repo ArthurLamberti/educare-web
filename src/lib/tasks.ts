@@ -11,6 +11,8 @@ export type Task = {
   instructions: string;
   level: Level | null;
   category: TaskCategory | null;
+  /** Open questions in order; answers refer to them by position. */
+  questions: Question[];
   archived: boolean;
   /** Assignments in any status; a task with assignments cannot be deleted, only archived. */
   assignmentCount: number;
@@ -18,7 +20,16 @@ export type Task = {
   updatedAt: string;
 };
 
-export type TaskInput = { title: string; instructions: string; levelId: number | null; categoryId: number | null };
+export type Question = { prompt: string };
+
+/** `instructions` may be empty when there is at least one question; `questions` replaces the whole list. */
+export type TaskInput = {
+  title: string;
+  instructions: string;
+  levelId: number | null;
+  categoryId: number | null;
+  questions: Question[];
+};
 
 /** The current teacher's tasks, newest first. */
 export async function listTasks(

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { AssignmentStatusBadge } from "@/components/assignment-status";
 import { GradeForm } from "@/components/grade-form";
 import { Markdown } from "@/components/markdown";
+import { QuestionAnswers } from "@/components/question-answers";
 import { ApiError } from "@/lib/api";
 import { formatScore, getAssignment } from "@/lib/assignments";
 import { requireUser } from "@/lib/auth";
@@ -47,17 +48,23 @@ export default async function GradePage({ params }: PageProps<"/grading/[id]">) 
         <p className="text-ink-500">O aluno ainda não entregou a resposta.</p>
       ) : (
         <>
-          <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">Instruções (como o aluno viu)</h2>
-            <div className={box}>
-              <Markdown>{submission.instructionsSnapshot}</Markdown>
+          {submission.instructionsSnapshot.trim() && (
+            <div className="flex flex-col gap-2">
+              <h2 className="text-lg font-semibold">Instruções (como o aluno viu)</h2>
+              <div className={box}>
+                <Markdown>{submission.instructionsSnapshot}</Markdown>
+              </div>
             </div>
-          </div>
+          )}
           <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">Resposta</h2>
-            <div className={box}>
-              <Markdown>{submission.answer}</Markdown>
-            </div>
+            <h2 className="text-lg font-semibold">{submission.answers.length > 0 ? "Respostas" : "Resposta"}</h2>
+            <QuestionAnswers answers={submission.answers} />
+            {(submission.answer.trim() || submission.answers.length === 0) && (
+              <div className={box}>
+                {submission.answers.length > 0 && <p className="mb-2 text-xs font-bold text-ink-500">Comentários do aluno</p>}
+                <Markdown>{submission.answer}</Markdown>
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-2">
             <h2 className="text-lg font-semibold">{grade ? "Revisar nota" : "Nota"}</h2>

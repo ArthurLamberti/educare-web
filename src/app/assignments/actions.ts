@@ -12,7 +12,7 @@ export type AnswerFormState = {
   error?: string;
   /** What the last successful click did. */
   saved?: "draft" | "sent";
-  values?: { answer: string };
+  values?: { answer: string; answers: string[] };
   /** Incremented on success, so the form restarts from the saved text. */
   done?: number;
 };
@@ -24,14 +24,23 @@ export type AnswerFormState = {
 export async function submitAnswerAction(id: number, prev: AnswerFormState, formData: FormData): Promise<AnswerFormState> {
   await requireUser(["STUDENT"]);
   const answer = String(formData.get("answer") ?? "");
+  // One "answers" field per question, in order (none when the task has no questions).
+  const answers = formData.getAll("answers").map(String);
+  const values = { answer, answers };
   const intent = formData.get("intent") === "draft" ? "draft" : "sent";
-  if (intent === "sent" && !answer.trim()) return { error: "Escreva a resposta antes de enviar.", values: { answer } };
+  if (intent === "sent") {
+    if (answers.length === 0 && !answer.trim()) return { error: "Escreva a resposta antes de enviar.", values };
+    if (answers.some((a) => !a.trim())) return { message: "Responda todas as perguntas antes de enviar.", values };
+  }
   try {
-    if (intent === "draft") await saveAnswerDraft(id, answer);
-    else await submitAnswer(id, answer);
+    if (intent === "draft") await saveAnswerDraft(id, values);
+    else await submitAnswer(id, values);
   } catch (error) {
-    if (error instanceof ApiError) return { message: error.message, error: error.problem.errors?.answer, values: { answer } };
-    return { message: error instanceof Error ? error.message : "Erro inesperado", values: { answer } };
+    if (error instanceof ApiError) {
+      const errors = error.problem.errors;
+      return { message: errors?.answers ? "Responda todas as perguntas antes de enviar." : error.message, error: errors?.answer, values };
+    }
+    return { message: error instanceof Error ? error.message : "Erro inesperado", values };
   }
   refresh();
   return { saved: intent, done: (prev.done ?? 0) + 1 };

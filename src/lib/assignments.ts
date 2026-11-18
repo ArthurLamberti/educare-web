@@ -2,6 +2,7 @@ import "server-only";
 
 import { apiFetch, normalizePage, type Page } from "./api";
 import type { Level } from "./levels";
+import type { Question } from "./tasks";
 import type { TaskCategory } from "./task-categories";
 
 export type AssignmentStatus = "ASSIGNED" | "SUBMITTED" | "GRADED";
@@ -16,6 +17,8 @@ export type Assignment = {
   level: Level | null;
   /** The task's category, if any (the teacher's own). */
   category: TaskCategory | null;
+  /** The task's current questions; once submitted, the ones answered are in `submission.answers`. */
+  questions: Question[];
   teacherId: number;
   teacherName: string;
   studentId: number;
@@ -41,6 +44,8 @@ export type Assignment = {
 export type AnswerDraft = {
   /** Markdown; may be empty */
   answer: string;
+  /** Draft answers to the questions, by position (may be blank). */
+  answers: string[];
   savedAt: string;
 };
 
@@ -60,7 +65,12 @@ export type Submission = {
   late: boolean;
   /** Sent back with a grade: the API refuses (409) if the answer changed since. */
   version: number;
+  /** For tasks with questions: each prompt as the student saw it, with their answer, in order. */
+  answers: { prompt: string; answer: string }[];
 };
+
+/** `answer` is required without questions; with questions, one non-blank entry per question in order. */
+export type AnswerInput = { answer: string; answers: string[] };
 
 export type Grade = {
   /** 0 to 10, at most one decimal */
@@ -107,13 +117,13 @@ export function unassign(id: number): Promise<void> {
 }
 
 /** Submit or replace the answer (until graded). */
-export function submitAnswer(id: number, answer: string): Promise<Assignment> {
-  return apiFetch(`/api/assignments/${id}/submission`, { method: "PUT", body: JSON.stringify({ answer }) });
+export function submitAnswer(id: number, input: AnswerInput): Promise<Assignment> {
+  return apiFetch(`/api/assignments/${id}/submission`, { method: "PUT", body: JSON.stringify(input) });
 }
 
 /** The student's private draft (until graded); the teacher never sees it. */
-export function saveAnswerDraft(id: number, answer: string): Promise<Assignment> {
-  return apiFetch(`/api/assignments/${id}/draft`, { method: "PUT", body: JSON.stringify({ answer }) });
+export function saveAnswerDraft(id: number, input: AnswerInput): Promise<Assignment> {
+  return apiFetch(`/api/assignments/${id}/draft`, { method: "PUT", body: JSON.stringify(input) });
 }
 
 /** The teacher's unsent correction; the student never sees it. */
